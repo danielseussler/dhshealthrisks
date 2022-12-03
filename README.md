@@ -6,4 +6,4 @@ Thesis at the Department of Statistics at the University of Munich, Germany
 
 
 
-**References
+**References**
