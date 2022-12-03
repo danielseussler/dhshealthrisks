@@ -60,4 +60,3 @@ mali = read_sf(here("data/raw/sdr_subnational_boundaries_2022-11-26_mali_2021_mi
 saveRDS(object = ethiopia, file = here("data", "processed", "ethiopia", "dhsboundaries.rds"))
 saveRDS(object = madagascar, file = here("data", "processed", "madagascar", "dhsboundaries.rds"))
 saveRDS(object = mali, file = here("data", "processed", "mali", "dhsboundaries.rds"))
-
