@@ -22,3 +22,9 @@ bin-release/
 env
 dhshealthrisks.Rproj
 .Renviron
+data/raw/rdhs/MDGE81FL.rds
+data/raw/rdhs/MDKR81FL.rds
+data/raw/rdhs/MDPR81FL.rds
+data/raw/rdhs/MLGE81FL.rds
+data/raw/rdhs/MLKR81FL.rds
+data/raw/rdhs/MLPR81FL.rds
