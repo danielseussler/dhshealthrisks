@@ -46,7 +46,7 @@ datasets[, .(SurveyId, FileType, SurveyNum, FileDateLastModified, FileName)]
 # download datasets
 rdhs::get_datasets(
   dataset_filenames = datasets$FileName
-  , output_dir_root = here("data", "raw", "rdhs"),
+  , output_dir_root = here("data", "raw", "rdhs")
   , clear_cache = TRUE
 )
 
