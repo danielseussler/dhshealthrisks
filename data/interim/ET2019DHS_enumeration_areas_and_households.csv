@@ -1,0 +1,157 @@
+﻿region;type;urban;value
+Tigray;Number of EAs;urban;2337
+Afar;Number of EAs;urban;383
+Amhara;Number of EAs;urban;7212
+Oromia;Number of EAs;urban;11526
+Somali;Number of EAs;urban;1561
+Benishangul-Gumuz;Number of EAs;urban;431
+SNNPR;Number of EAs;urban;5408
+Gambela;Number of EAs;urban;216
+Harari;Number of EAs;urban;183
+Addis Ababa;Number of EAs;urban;5669
+Dire Dawa;Number of EAs;urban;366
+Ethiopia;Number of EAs;urban;35292
+Tigray;Average EA size;urban;174
+Afar;Average EA size;urban;170
+Amhara;Average EA size;urban;177
+Oromia;Average EA size;urban;166
+Somali;Average EA size;urban;172
+Benishangul-Gumuz;Average EA size;urban;166
+SNNPR;Average EA size;urban;169
+Gambela;Average EA size;urban;168
+Harari;Average EA size;urban;181
+Addis Ababa;Average EA size;urban;168
+Dire Dawa;Average EA size;urban;173
+Ethiopia;Average EA size;urban;170
+Tigray;Number of EAs;rural;6914
+Afar;Number of EAs;rural;141
+Amhara;Number of EAs;rural;29316
+Oromia;Number of EAs;rural;45456
+Somali;Number of EAs;rural;5478
+Benishangul-Gumuz;Number of EAs;rural;1275
+SNNPR;Number of EAs;rural;23097
+Gambela;Number of EAs;rural;414
+Harari;Number of EAs;rural;194
+Addis Ababa;Number of EAs;rural;0
+Dire Dawa;Number of EAs;rural;247
+Ethiopia;Number of EAs;rural;113801
+Tigray;Average EA size;rural;122
+Afar;Average EA size;rural;119
+Amhara;Average EA size;rural;121
+Oromia;Average EA size;rural;117
+Somali;Average EA size;rural;122
+Benishangul-Gumuz;Average EA size;rural;119
+SNNPR;Average EA size;rural;119
+Gambela;Average EA size;rural;100
+Harari;Average EA size;rural;121
+Addis Ababa;Average EA size;rural;0
+Dire Dawa;Average EA size;rural;125
+Ethiopia;Average EA size;rural;119
+Tigray;Number of EAs;total;9251
+Afar;Number of EAs;total;1793
+Amhara;Number of EAs;total;36528
+Oromia;Number of EAs;total;56982
+Somali;Number of EAs;total;7039
+Benishangul-Gumuz;Number of EAs;total;1706
+SNNPR;Number of EAs;total;28505
+Gambela;Number of EAs;total;630
+Harari;Number of EAs;total;377
+Addis Ababa;Number of EAs;total;5669
+Dire Dawa;Number of EAs;total;613
+Ethiopia;Number of EAs;total;149093
+Tigray;Average EA size;total;135
+Afar;Average EA size;total;130
+Amhara;Average EA size;total;132
+Oromia;Average EA size;total;127
+Somali;Average EA size;total;133
+Benishangul-Gumuz;Average EA size;total;131
+SNNPR;Average EA size;total;129
+Gambela;Average EA size;total;123
+Harari;Average EA size;total;150
+Addis Ababa;Average EA size;total;168
+Dire Dawa;Average EA size;total;154
+Ethiopia;Average EA size;total;131
+Tigray;Number of clusters allocated;urban;5
+Afar;Number of clusters allocated;urban;5
+Amhara;Number of clusters allocated;urban;5
+Oromia;Number of clusters allocated;urban;6
+Somali;Number of clusters allocated;urban;5
+Benishangul-Gumuz;Number of clusters allocated;urban;3
+SNNPR;Number of clusters allocated;urban;3
+Gambela;Number of clusters allocated;urban;5
+Harari;Number of clusters allocated;urban;15
+Addis Ababa;Number of clusters allocated;urban;25
+Dire Dawa;Number of clusters allocated;urban;16
+Ethiopia;Number of clusters allocated;urban;93
+Tigray;Number of clusters allocated;rural;20
+Afar;Number of clusters allocated;rural;20
+Amhara;Number of clusters allocated;rural;30
+Oromia;Number of clusters allocated;rural;29
+Somali;Number of clusters allocated;rural;20
+Benishangul-Gumuz;Number of clusters allocated;rural;22
+SNNPR;Number of clusters allocated;rural;32
+Gambela;Number of clusters allocated;rural;20
+Harari;Number of clusters allocated;rural;10
+Addis Ababa;Number of clusters allocated;rural;0
+Dire Dawa;Number of clusters allocated;rural;9
+Ethiopia;Number of clusters allocated;rural;212
+Tigray;Number of clusters allocated;total;25
+Afar;Number of clusters allocated;total;25
+Amhara;Number of clusters allocated;total;35
+Oromia;Number of clusters allocated;total;35
+Somali;Number of clusters allocated;total;25
+Benishangul-Gumuz;Number of clusters allocated;total;25
+SNNPR;Number of clusters allocated;total;35
+Gambela;Number of clusters allocated;total;25
+Harari;Number of clusters allocated;total;25
+Addis Ababa;Number of clusters allocated;total;25
+Dire Dawa;Number of clusters allocated;total;25
+Ethiopia;Number of clusters allocated;total;305
+Tigray;Number of households allocated;urban;150
+Afar;Number of households allocated;urban;150
+Amhara;Number of households allocated;urban;150
+Oromia;Number of households allocated;urban;180
+Somali;Number of households allocated;urban;150
+Benishangul-Gumuz;Number of households allocated;urban;90
+SNNPR;Number of households allocated;urban;90
+Gambela;Number of households allocated;urban;150
+Harari;Number of households allocated;urban;450
+Addis Ababa;Number of households allocated;urban;750
+Dire Dawa;Number of households allocated;urban;480
+Ethiopia;Number of households allocated;urban;2,79
+Tigray;Number of households allocated;rural;600
+Afar;Number of households allocated;rural;600
+Amhara;Number of households allocated;rural;900
+Oromia;Number of households allocated;rural;870
+Somali;Number of households allocated;rural;600
+Benishangul-Gumuz;Number of households allocated;rural;660
+SNNPR;Number of households allocated;rural;960
+Gambela;Number of households allocated;rural;600
+Harari;Number of households allocated;rural;300
+Addis Ababa;Number of households allocated;rural;0
+Dire Dawa;Number of households allocated;rural;270
+Ethiopia;Number of households allocated;rural;6,36
+Tigray;Number of households allocated;total;750
+Afar;Number of households allocated;total;750
+Amhara;Number of households allocated;total;1,05
+Oromia;Number of households allocated;total;1,05
+Somali;Number of households allocated;total;750
+Benishangul-Gumuz;Number of households allocated;total;750
+SNNPR;Number of households allocated;total;1,05
+Gambela;Number of households allocated;total;750
+Harari;Number of households allocated;total;750
+Addis Ababa;Number of households allocated;total;750
+Dire Dawa;Number of households allocated;total;750
+Ethiopia;Number of households allocated;total;9,15
+Tigray;Percentage Urban;;32,5
+Afar;Percentage Urban;;27,89
+Amhara;Percentage Urban;;26,44
+Oromia;Percentage Urban;;26,47
+Somali;Percentage Urban;;28,62
+Benishangul-Gumuz;Percentage Urban;;31,99
+SNNPR;Percentage Urban;;24,94
+Gambela;Percentage Urban;;46,69
+Harari;Percentage Urban;;58,56
+Addis Ababa;Percentage Urban;;100
+Dire Dawa;Percentage Urban;;67,22
+Ethiopia;Percentage Urban;;30,7
