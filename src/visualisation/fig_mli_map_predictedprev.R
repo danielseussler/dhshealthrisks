@@ -7,6 +7,7 @@ library(here)
 library(h3)
 library(ggplot2)
 library(viridis)
+library(patchwork)
 library(gamlss.dist)
 
 # predicted mu and sigma were computed in the file analysis.R
