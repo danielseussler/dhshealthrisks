@@ -35,7 +35,7 @@ sim.rs = function(.type, .B, .strata, .holdout, .iter) {
 
   mod = gamboost(
     formula = frml.2
-    , data = ddtrain
+    , data = dtrain
     , family = Binomial(link = "logit")
     , control = boost_control(mstop = MSTOP, nu = 0.1, trace = FALSE)
   )
@@ -88,7 +88,7 @@ sim.sv = function(.cluster, .rep, .k, .holdout, .iter) {
   .innerfold = switch(.holdout, "A" = holdout.1, "B" = holdout.2)
 
   dtrain = sv[which(.innerfold[, .iter] != 3L), ]
-  test = sv[which(.innerfold[, .iter] == 3L), ]
+  dtest = sv[which(.innerfold[, .iter] == 3L), ]
 
   mod = gamboost(
     formula = frml.2
@@ -160,7 +160,7 @@ sim.ss = function(.holdout, .iter) {
 
   folds.ss = 1L * as.matrix(1L == replicate(25L, folds.svy(dtrain, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
 
-  cv = cvrisk(object = mod, folds = folds.cv)
+  cv = cvrisk(object = mod, folds = folds.ss)
   mod[mstop(cv)]
 
   dt = data.table(
