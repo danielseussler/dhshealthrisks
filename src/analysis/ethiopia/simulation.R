@@ -191,4 +191,4 @@ res.ss = rbindlist(res.ss)
 
 results = rbindlist(list(res.rs, res.sv, res.ss))
 
-save(results, file = here("results", "x4qx59v1.rda"))
+save(results, file = here("models", "x4qx59v1.rda"))
