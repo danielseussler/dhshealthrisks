@@ -13,27 +13,34 @@ options("mc.cores" = detectCores())
 
 load(file = here("data", "processed", "mali", "surveydata.rda"))
 load(file = here("data", "processed", "mali", "geodata.rda"))
-source(file = here("source", "mali", "formula.R"))
+source(file = here("src", "analysis", "mali", "formula.R"))
 cl = dplyr::left_join(cl, cloc)
-y = matrix(c(cl$npos, cl$nneg), ncol = 2)
+
+# define outcome
+y = matrix(c(cl$npos, cl$nneg), ncol = 2L)
 
 # run model
 mod = gamboostLSS(
-  formula = frml.3
+  formula = frml.1
   , data = cl
   , families = as.families("BB")
   , method = "noncyclic"
   , control = boost_control(mstop = 1000L, nu = 0.25, trace = TRUE)
 )
 
-# cross-validate based with survey stratified folds
+# resampling based on survey stratified folds
 cv = cvrisk(
   object = mod
-  , folds = cv(weights = model.weights(mod), type = "kfold", B = 10L, strata = cl$strata)
-  , grid = make.grid(max = 1000L, length.out = 400L, log = TRUE)
+  , folds = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = cl$strata)
+  , grid = make.grid(max = 1000L, length.out = 500L, log = TRUE)
 )
 
 mod[mstop(cv)]
+table(selected(mod)$mu)
+table(selected(mod)$sigma)
+
+names(coef(mod, parameter = "mu"))
+names(coef(mod, parameter = "sigma"))
 
 # do predictions
 pred = predict(mod, newdata = grid, type = "response")
@@ -61,11 +68,7 @@ stab.2 = stabsel(# FIXME
 
 
 # check results
-summary(res[[1]]$cv)
-plot(res[[1]]$cv)
 
-summary(res[[1]]$mod)
-plot(res[[1]]$mod)
 
 
 save(mod, pred, file = here("models", "9dkw7wyn.rda"))
