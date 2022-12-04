@@ -161,7 +161,7 @@ sim.ss = function(.holdout, .iter) {
 
   folds.ss = 1L * as.matrix(1L == replicate(25L, folds.svy(dtrain, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
 
-  cv = cvrisk(object = mod, folds = folds.cv)
+  cv = cvrisk(object = mod, folds = folds.ss)
   mod[mstop(cv)]
 
   dt = data.table(
@@ -192,4 +192,4 @@ res.ss = rbindlist(res.ss)
 
 results = rbindlist(list(res.rs, res.sv, res.ss))
 
-save(results, file = here("results", "88qlclkf.rda"))
+save(results, file = here("models", "88qlclkf.rda"))
