@@ -12,9 +12,9 @@ library(data.table)
 
 # load data and create regular grid of locations
 shp = readRDS(file = here("data", "processed", "mali", "dhsboundaries.rds"))
-indices = polyfill(st_union(shp), res = 7) # average area of hexagon is 5.161293360
+indices = polyfill(st_union(shp), res = 7L) # average area of hexagon is 5.161293360
 coords = h3_to_geo(indices)
-grid = data.table(h3_index = indices, lon = coords[, 2] , lat = coords[, 1])
+grid = data.table(h3_index = indices, lon = coords[, 2L] , lat = coords[, 1L])
 
 cloc = readRDS(file = here("data", "raw", "rdhs", "MLGE81FL.rds"))
 cloc = cloc |> st_as_sf() |> st_drop_geometry() |> as.data.table()
@@ -64,17 +64,16 @@ grid$elev = extract(elev, grid[, .(lon, lat)], method = "bilinear", ID = FALSE)
 grid$pop = extract(pop, grid[, .(lon, lat)], method = "bilinear", ID = FALSE)
 
 grid$urban = extract(urban, grid[, .(lon, lat)], method = "simple", ID = FALSE)
-grid$urban = grid$urban > 20
+grid$urban = grid$urban > 20L
 grid$urban = factor(grid$urban, levels = c(FALSE, TRUE), labels = c("rural", "urban"))
 
 grid$climate = extract(climzone, grid[, .(lon, lat)], ID = FALSE)
-grid$climate = factor(grid$climate, levels = c(3, 4, 6), labels = c("Tropical, savannah", "Arid, desert, hot", "Arid, steppe, hot"))
+grid$climate = factor(grid$climate, levels = c(3L, 4L, 6L), labels = c("Tropical, savannah", "Arid, desert, hot", "Arid, steppe, hot"))
 
 tmp = extract(x = rsd, grid[, .(lon, lat)], method = "bilinear", ID = FALSE)
 colnames(tmp) = c("evi", "lstday", "lstnight", "ndvi", "precip", "water_mask")
 grid = cbind(grid, tmp)
 
-grid[, log_pop := log(pop + 1)]
 grid = grid[complete.cases(grid)]
 
 
@@ -83,13 +82,11 @@ cloc$pop = extract(pop, cloc[, .(lon, lat)], method = "bilinear", ID = FALSE)
 cloc$elev = extract(elev, cloc[, .(lon, lat)], method = "bilinear", ID = FALSE)
 
 cloc$climate = extract(climzone, cloc[, .(lon, lat)], ID = FALSE)
-cloc$climate = factor(cloc$climate, levels = c(3, 4, 6), labels = c("Tropical, savannah", "Arid, desert, hot", "Arid, steppe, hot"))
+cloc$climate = factor(cloc$climate, levels = c(3L, 4L, 6L), labels = c("Tropical, savannah", "Arid, desert, hot", "Arid, steppe, hot"))
 
 tmp = extract(x = rsd, cloc[, .(lon, lat)], method = "bilinear", ID = FALSE)
 colnames(tmp) = c("evi", "lstday", "lstnight", "ndvi", "precip", "water_mask")
 cloc = cbind(cloc, tmp)
-
-cloc[, log_pop := log(pop + 1)]
 
 
 # alternative construct urban / rural indicator, I finally use the SMOD GHSL
