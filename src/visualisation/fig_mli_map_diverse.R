@@ -33,14 +33,14 @@ plt.1 = ggplot() +
   scale_color_continuous(
     type = "viridis", option = "inferno", name = "Prevalence", limits = c(0, 1),
     guide = guide_colorbar(direction = "horizontal", barheight = unit(2, units = "mm"),
-                           barwidth = unit(50, units = "mm"), label.hjust = 0,
-                           title.position = "top", title.hjust = 0.5)
+      barwidth = unit(50, units = "mm"), label.hjust = 0,
+      title.position = "top", title.hjust = 0.5)
   ) +
   theme(legend.position = "bottom")
 
 plt.2 = ggplot() +
   geom_raster(data = climzone_df, mapping = aes(x = x, y = y, fill = label)) +
-  #scale_fill_manual(values = c("#46AAFA", "#FF0000", "#F5A500"), na.value = "transparent", na.translate = F, name = "") +
+  # scale_fill_manual(values = c("#46AAFA", "#FF0000", "#F5A500"), na.value = "transparent", na.translate = F, name = "") +
   scale_fill_grey(na.value = "transparent", na.translate = F, name = "", start = 0.4, end = 0.8) +
   geom_sf(data = shp, fill = NA) +
   geom_sf(data = cl_sf) +
