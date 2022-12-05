@@ -11,9 +11,10 @@ library(viridis)
 # average cluster size
 N = 50L
 MU = 0.2
+x = 0:50
 
-df.BI = data.frame(x = 0:50, BI = dBI(x = x, mu = MU, bd = N))
-df.BB = data.frame(x = 0:50, BB = dBB(x = x, mu = MU, sigma = 0.1, bd = N))
+df.BI = data.frame(x = x, BI = dBI(x = x, mu = MU, bd = N))
+df.BB = data.frame(x = x, BB = dBB(x = x, mu = MU, sigma = 0.1, bd = N))
 
 theme_set(theme_minimal())
 
@@ -26,7 +27,7 @@ plt = ggplot() +
   labs(x = expression(x), y = expression(p(x))) +
   theme(legend.position = "bottom")
 
-ggsave(plot = plt, filename = "fig_distributions.png", path = here("results", "figures"), dpi = 600, width = 200, height = 100, units = "mm", device = png)
+ggsave(plot = plt, filename = "fig_distributions.png", path = here("results", "figures"), scale = 1.2, dpi = 600, width = 200, height = 100, units = "mm", device = png)
 
 
 
