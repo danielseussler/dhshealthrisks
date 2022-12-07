@@ -62,7 +62,7 @@ frml.2 = hazf ~
   bols(mage) + bols(mage, by = csex) + bbs(mage, center = TRUE, df = 1, knots = 20, boundary.knots = list(15, 60)) +
   bols(medu) + bols(medu, by = csex) + bbs(medu, center = TRUE, df = 1, knots = 20, boundary.knots = list(0, 15)) +
   bols(healthaccess) + bols(healthaccess, by = csex) + bbs(healthaccess, center = TRUE, df = 1, knots = 20) + bbs(healthaccess, by = csex, center = TRUE, df = 1, knots = 20) +
-  bols(cityaccess) + bols(cityaccess, by = csex) + bbs(cityaccess, center = TRUE, df = 1, knots = 20) + + bbs(cityaccess, by = csex, center = TRUE, df = 1, knots = 20) +
+  bols(cityaccess) + bols(cityaccess, by = csex) + bbs(cityaccess, center = TRUE, df = 1, knots = 20) + bbs(cityaccess, by = csex, center = TRUE, df = 1, knots = 20) +
 
   bmrf(dhsregion, bnd = nb)
 
