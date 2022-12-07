@@ -22,7 +22,7 @@ cl = dplyr::left_join(cl, cloc)
 
 
 # define outer folds on which models are evaluated
-rsp = vfold_cv(data = cl, v = 10L, repeats = 2L, strata = strata)
+rsp = vfold_cv(data = cl, v = 10L, repeats = 1L, strata = strata)
 
 
 # distributional regression with beta-binomial distributed outcome
@@ -41,7 +41,7 @@ for (i in 1:nrow(rsp)) {
     , method = "noncyclic"
     , control = boost_control(mstop = 1000L, nu = 0.25, trace = TRUE)
   )
-
+  
   cv = cvrisk(
     object = mod
     # , grid = make.grid(max = 1000L, length.out = 100L, log = TRUE)
@@ -70,7 +70,7 @@ for (i in 1:nrow(rsp)) {
     formula = frml.1$mu
     , data = dtrain
     , family = Binomial(type = "glm")
-    , control = boost_control(mstop = 1000L, nu = 0.25, trace = TRUE)
+    , control = boost_control(mstop = 1000L, nu = 0.1, trace = TRUE)
   )
 
   cv = cvrisk(
@@ -117,7 +117,7 @@ for (i in 1:nrow(rsp)) {
 
   pred = predict(object = mod, newdata = dtest, type = "response")
 
-  res.3 = rbindlist(list(res.3, data.table(model = "C", id = i, mstop = mstop(cv), k = dtest$npos, n = dtest$n, pred$mu, sigma = pred$sigma[, 1L])))
+  res.3 = rbindlist(list(res.3, data.table(model = "C", id = i, mstop = mstop(cv), k = dtest$npos, n = dtest$n, mu = pred$mu, sigma = pred$sigma[, 1L])))
 
 }
 
