@@ -78,7 +78,7 @@ sim.tree = function(.model = NULL, .formula = NULL, .iter = NULL) {
     formula = .formula
     , data = training
     , family = Binomial()
-    , control = boost_control(mstop = 300L, nu = 0.01, trace = TRUE)
+    , control = boost_control(mstop = 300L, nu = 0.01, trace = FALSE)
     , tree_controls = partykit::ctree_control(maxdepth = 3L, saveinfo = FALSE)
   )
 
@@ -96,7 +96,7 @@ sim.tree = function(.model = NULL, .formula = NULL, .iter = NULL) {
     , iter = .iter
     , mstop = mstop(cv)
     , actual = testing$hazx
-    , pred = predict(object = mod, newdata = testing, type = "response")
+    , pred = c(predict(object = mod, newdata = testing, type = "response"))
   )
 
   return(dt)
