@@ -186,10 +186,8 @@ res.ss = pmap(bench, ~ sim.ss(..1, ..2))
 
 
 # combine and save all predictions
-res.rs = rbindlist(res.rs)
-res.sv = rbindlist(res.sv)
-res.ss = rbindlist(res.ss)
-
-results = rbindlist(list(res.rs, res.sv, res.ss))
+results = list(res.rs, res.sv, res.ss) |>
+  lapply(rbindlist) |>
+  rbindlist()
 
 save(results, file = here("models", "88qlclkf.rda"))
