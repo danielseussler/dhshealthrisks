@@ -10,37 +10,43 @@ frml.1 = list(
   mu = y ~
     bols(intercept, intercept = FALSE) +
     
-    bols(urban) +
+    bols(urban, contrasts.arg = "contr.dummy") +
     bols(climate) +
 
     bols(elev) +
-    bols(elev, by = climate) +
+    bbs(elev, center = TRUE, df = 1L, knots = 20L) +
 
     bols(lstday) +
-    bols(lstday, by = climate) +
+    bbs(lstday, center = TRUE, df = 1L, knots = 20L) +
 
     bols(lstnight) +
-    bols(lstnight, by = climate) +
+    bbs(lstnight, center = TRUE, df = 1L, knots = 20L) +
 
     bols(ndvi) +
-    bols(ndvi, by = climate) +
+    bbs(ndvi, center = TRUE, df = 1L, knots = 20L) +
 
     bols(evi) +
-    bols(evi, by = climate) +
+    bbs(evi, center = TRUE, df = 1L, knots = 20L) +
 
     bols(precip) +
-    bols(precip, by = climate) +
+    bbs(precip, center = TRUE, df = 1L, knots = 20L) +
 
     bols(pop) +
-    bols(pop, by = climate) +
+    bbs(pop, center = TRUE, df = 1L, knots = 20L) +
+
+    # brad(lon, lat, knots = 100, df = 1L, covFun = fields::stationary.cov,
+    #      args = list(Covariance = "Matern", smoothness = 1.5, theta = NULL)), 
 
     bols(lon) + bols(lat) + bols(lon, by = lat) +
     bspatial(lon, lat, df = 1L, center = TRUE),
 
   sigma = y ~
     bols(intercept, intercept = FALSE) +
-    bols(urban) +
+    bols(urban, contrasts.arg = "contr.dummy") +
     
+    # brad(lon, lat, knots = 100, df = 1L, covFun = fields::stationary.cov,
+    #      args = list(Covariance = "Matern", smoothness = 1.5, theta = NULL))
+  
     bols(lon) + bols(lat) + bols(lon, by = lat) +
     bspatial(lon, lat, df = 1L, center = TRUE)
 )
