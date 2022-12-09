@@ -17,7 +17,7 @@ options("mc.cores" = detectCores())
 
 load(file = here("data", "processed", "madagascar", "surveydata.rda"))
 source(file = here("src", "analysis", "madagascar", "formula.R"))
-source(file = here("src", "utils", "purrr_progress.R"))
+source(file = here("src", "utils", "func_purr_progress.R"))
 
 ITER = 50L # number of repeats
 ITER.ss = 25L # number of subsampling folds in inner folds
