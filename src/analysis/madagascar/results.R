@@ -47,7 +47,7 @@ ggplot(data = subset(sim$metr, holdout == "A"), aes(x = interaction(method, cvst
 qss = new.env()
 load(file = here("models", "wt79adpc.rda"), envir = qss)
 
-qss$cnt = qss$res[, .(count = .N), by = list(method, selected)][, prop := count / 50L]
+qss$cnt = qss$res[, .(count = .N), by = .(method, selected)][, prop := count / 50L]
 qss$cnt = dcast(qss$cnt, formula = selected ~ method, value.var = "count")
 qss$cnt[, "rn > ss" := A > B]
 qss$cnt
@@ -69,3 +69,4 @@ ms$metr = ms$res[,
                    pre = precision(actual, predc)),
                  by = list(model)]
 ms$metr
+
