@@ -55,7 +55,7 @@ sv = mutate(sv, hv024 = labelled::to_character(hv024), hv025 = labelled::to_char
 # national estimates can also be extracted by DHS survey package
 # weights are household level / 1e6 by DHS Guide
 
-design = svydesign(ids = ~hv001, strata = ~hv023, data = sv, weights = ~hv005)
+design = svydesign(ids = ~hv001 + hv002, strata = ~hv023, data = sv, weights = ~hv005)
 
 results = vector(mode = "list")
 results[[1]] = svyby(formula = ~ind, by = ~hv024, design = design, FUN = svyciprop, na.rm = TRUE, vartype = "ci")
