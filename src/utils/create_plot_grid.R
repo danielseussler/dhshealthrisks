@@ -3,7 +3,7 @@
 #
 #
 
-create_plot_grid(.shp, .res = 5L) {
+create_plot_grid = function(.shp, .res = 5L) {
   
   require(h3)
   
