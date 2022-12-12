@@ -3,7 +3,7 @@
 #
 #
 
-plot_numeric_partial_effects = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL, .rugged = FALSE) {
+plt_numeric = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL, .rugged = FALSE, .title = NULL, .xlab = NULL) {
 
   require(ggplot2)
   require(mboost)
@@ -19,22 +19,25 @@ plot_numeric_partial_effects = function(.mod, .data, .parameter = NULL, .var, .y
   tmp = data.frame(x = x[, .var], y = y - mean(y)) # but why mean centered?
   plt = ggplot(data = tmp, mapping = aes(x = x, y = y)) +
     geom_line(color = "black", linewidth = 1L) +
-    labs(x = .var, y = expression(f[partial]))
+    labs(y = expression(f[partial]))
 
+  if (!is.null(.xlab)) plt = plt + xlab(.xlab)
   if (!is.null(.ylim)) plt = plt + ylim(.ylim)
-  if (!is.null(.rugged)) plt = plt + geom_rug(sides = "b")
+  if (isTRUE(.rugged)) plt = plt + geom_rug(sides = "b")
+  if (!is.null(.title)) plt = plt + ggtitle(.title) + theme(plot.title = element_text(hjust = 0.5))
 
   return(plt)
 }
 
 
 
-plot_spatial_partial_effects = function(.mod, .data, .parameter = NULL, .var = c("lon", "lat"), .shp, .res = 5L) {
+plt_spatial_s = function(.mod, .data, .parameter = NULL, .var = c("lon", "lat"), .shp, .res = 5L, .limscol = NULL, .title = NULL) {
 
   require(ggplot2)
   require(h3)
   require(sf)
   require(mboost)
+  require(viridis)
 
   if (!is.null(.parameter)) .mod <- .mod[[.parameter]]
 
@@ -43,7 +46,7 @@ plot_spatial_partial_effects = function(.mod, .data, .parameter = NULL, .var = c
     extract(.mod, what = "bnames", which = paste0(.var[2]))
   ))
 
-  locs = polyfill(polygon = .shp, res = .res)
+  locs = polyfill(polygon = st_union(.shp), res = .res)
 
   coords = h3_to_geo(locs)
   coords = data.frame("lon" = coords[, 2], "lat" = coords[, 1])
@@ -54,13 +57,19 @@ plot_spatial_partial_effects = function(.mod, .data, .parameter = NULL, .var = c
   dt_sf = h3_to_geo_boundary_sf(locs)
   dt_sf$z = z
 
-  plt = ggplot(data = dt_sf) + geom_sf(aes(fill = z), color = NA)
+  plt = ggplot(data = dt_sf) +
+    geom_sf(aes(fill = z), color = NA) +
+    scale_fill_viridis_c(name = expression(f[smooth]), limits = .limscol) +
+    labs(x = "Longitude", y = "Latitude")
+
+  if (!is.null(.title)) plt = plt + ggtitle(.title) + theme(plot.title = element_text(hjust = 0.5))
 
   return(plt)
 }
 
 
-plot_factor_partial_effects = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL) {
+
+plt_categorical = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL) {
 
   return(invisible(NULL))
 }
