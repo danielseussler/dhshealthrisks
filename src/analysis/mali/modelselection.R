@@ -44,7 +44,6 @@ for (i in 1:nrow(rsp)) {
   
   cv = cvrisk(
     object = mod
-    # , grid = make.grid(max = 1000L, length.out = 100L, log = TRUE)
     , grid = 1:mstop(mod)
     , folds = cv(model.weights(mod), type = "subsampling", B = 25L, strata = dtrain$strata)
   )
@@ -75,7 +74,6 @@ for (i in 1:nrow(rsp)) {
 
   cv = cvrisk(
     object = mod
-    # , grid = make.grid(max = 1000L, length.out = 100L, log = TRUE)
     , grid = 1:mstop(mod)
     , folds = cv(model.weights(mod), type = "subsampling", B = 25L, strata = dtrain$strata)
   )
@@ -108,7 +106,6 @@ for (i in 1:nrow(rsp)) {
 
   cv = cvrisk(
     object = mod
-    # , grid = make.grid(max = 500L, length.out = 100L, log = TRUE)
     , grid = 1:mstop(mod)
     , folds = cv(model.weights(mod), type = "subsampling", B = 25L, strata = dtrain$strata)
   )
