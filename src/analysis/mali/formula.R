@@ -9,8 +9,8 @@
 frml.1 = list(
   mu = y ~
     bols(intercept, intercept = FALSE) +
-    
-    bols(urban, contrasts.arg = "contr.dummy") +
+
+    bols(urban) +
     bols(climate) +
 
     bols(elev) +
@@ -35,18 +35,18 @@ frml.1 = list(
     bbs(pop, center = TRUE, df = 1L, knots = 20L) +
 
     # brad(lon, lat, knots = 100, df = 1L, covFun = fields::stationary.cov,
-    #      args = list(Covariance = "Matern", smoothness = 1.5, theta = NULL)), 
+    #      args = list(Covariance = "Matern", smoothness = 1.5, theta = NULL)),
 
     bols(lon) + bols(lat) + bols(lon, by = lat) +
     bspatial(lon, lat, df = 1L, center = TRUE),
 
   sigma = y ~
     bols(intercept, intercept = FALSE) +
-    bols(urban, contrasts.arg = "contr.dummy") +
-    
+    bols(urban) +
+
     # brad(lon, lat, knots = 100, df = 1L, covFun = fields::stationary.cov,
     #      args = list(Covariance = "Matern", smoothness = 1.5, theta = NULL))
-  
+
     bols(lon) + bols(lat) + bols(lon, by = lat) +
     bspatial(lon, lat, df = 1L, center = TRUE)
 )
