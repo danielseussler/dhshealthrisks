@@ -8,8 +8,12 @@ library(data.table)
 library(gamlss.dist)
 library(Metrics)
 library(xtable)
+library(patchwork)
+
+source(file = here("src", "utils", "func_plot_partial_effects.R"))
 
 # load results from the model comparison
+mc = new.env()
 load(file = here("models", "4r35hoz4.rda"))
 
 # compute lower and upper 90% prediction intervals
@@ -25,7 +29,5 @@ res[, coverage := ifelse((lower <= k) & (k <= upper), 1L, 0L)]
 tab = res[, .(bias = mean(k/n - mu), mae = mae(k/n, mu), rmse = rmse(k/n, mu), coverage = mean(coverage)), by = .(model)]
 
 print(xtable(tab, type = "latex"), file = here("results", "tables", "tab_mli_comparison.tex"), include.rownames = FALSE)
-
-
 
 
