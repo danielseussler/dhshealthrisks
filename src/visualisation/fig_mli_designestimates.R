@@ -43,31 +43,32 @@ sv = mutate(sv, hv024 = labelled::to_character(hv024), hv025 = labelled::to_char
 # national estimates can also be extracted by DHS survey package
 # weights are household level / 1e6 by DHS Guide
 
-design = svydesign(ids = ~hv001, strata = ~hv023, data = sv, weights = ~hv005)
+design = svydesign(ids = ~hv001+hv002, strata = ~hv023, data = sv, weights = ~hv005)
 
 results = vector(mode = "list")
 results[[1]] = svyby(formula = ~hml35, by = ~hv024, design = design, FUN = svyciprop, na.rm = TRUE, vartype = "ci")
-results[[2]] = svyby(formula = ~hml35, by = ~ hv024 + hv025, design = design, FUN = svyciprop, na.rm = TRUE, vartype = "ci")
 results[[3]] = svyby(formula = ~hml35, by = ~hv025, design = design, FUN = svyciprop, na.rm = TRUE, vartype = "ci")
 results[[4]] = svyby(formula = ~hml35, by = ~hv000, design = design, FUN = svyciprop, na.rm = TRUE, vartype = "ci")
 
 results = lapply(results, as.data.frame)
 results = do.call(bind_rows, results)
 
-results$Region = stringr::str_to_title(results$hv024)
-results$urban = stringr::str_to_title(results$hv025)
-results$Region[is.na(results$Region)] = "Mali\n(total)"
-results$urban[is.na(results$urban)] = "total"
-results$Region = forcats::fct_relevel(results$Region, "Mali\n(total)")
+results$region = stringr::str_to_title(results$hv024)
+results$region[is.na(results$region)] = stringr::str_to_title(results$hv025[is.na(results$region)])
+results$region[is.na(results$region)] = "Mali\n(total)"
 
-theme_set(theme_minimal())
+results$region[results$region == "Urban"] = "Mali\n(Urban)"
+results$region[results$region == "Rural"] = "Mali\n(Rural)"
 
-plt.1 = ggplot(data = results, mapping = aes(x = Region, y = hml35, color = urban, shape = urban)) +
+results$region = forcats::fct_reorder(results$region, results$hml35)
+
+theme_set(theme_classic())
+
+plt = ggplot(data = results, mapping = aes(x = region, y = hml35)) +
   geom_pointrange(mapping = aes(ymin = ci_l, ymax = ci_u), position = position_dodge(width = 0.5)) +
-  geom_abline(intercept = results[results$Region == "Mali\n(total)" & results$urban == "total", "hml35"], slope = 0, color = "gray") +
-  geom_abline(intercept = 0, slope = 0, color = "black") +
-  labs(y = "Prevalence") +
-  scale_color_manual(values = viridis(n = 3, alpha = 0.8, begin = 0.3, end = 0.7), name = "Type") +
-  scale_shape(name = "Type")
+  geom_abline(intercept = results[results$region == "Mali\n(total)", "hml35"], slope = 0, color = "gray") +
+  scale_y_continuous(expand = c(0, 0)) + 
+  labs(x = "", y = "Prevalence") +
+  scale_color_manual(values = viridis(n = 3, alpha = 0.8, begin = 0.3, end = 0.7), name = "Type")
 
-ggsave(plot = plt.1, filename = "fig_mli_designestimates.png", path = here("results", "figures"), dpi = 600, width = 200, height = 100, units = "mm", device = png)
+ggsave(plot = plt, filename = "fig_mli_designestimates.png", path = here("results", "figures"), dpi = 600, width = 200, height = 100, units = "mm", device = png)
