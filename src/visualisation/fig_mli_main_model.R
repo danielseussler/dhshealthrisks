@@ -55,9 +55,9 @@ ggsave(plot = patch, filename = "fig_mli_main_effects.png", path = here("results
 
 
 # coefficient table for categorical covariates
-coef(mod, parameter = "mu", which = "urban")$`bols(urban, contrasts.arg = "contr.dummy")`
-coef(mod, parameter = "mu", which = "climate")$`bols(climate, contrasts.arg = "contr.dummy")`
-coef(mod, parameter = "sigma", which = "urban")$`bols(urban, contrasts.arg = "contr.dummy")`
+coef(mod, parameter = "mu", which = "urban")$`bols(urban)`
+coef(mod, parameter = "mu", which = "climate")$`bols(climate)`
+coef(mod, parameter = "sigma", which = "urban")$`bols(urban)`
 
 
 
