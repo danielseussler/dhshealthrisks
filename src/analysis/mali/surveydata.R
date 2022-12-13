@@ -37,7 +37,7 @@ write.csv2(cbind("#", label), file = here("src", "analysis", "mali", "questions.
 variables = c("hv001", "hv002", "hv005", "hv023", "hv024", "hv025", "hml32", "hml35", "hv042", "hv103", "hc1")
 questions = rdhs::search_variables(dataset_filenames = "MLPR81FL", variables = variables)
 
-sv = rdhs::extract_dhs(questions, add_geo = TRUE)
+sv = rdhs::extract_dhs(questions = questions, add_geo = TRUE)
 sv = sv[[1]]
 
 
@@ -56,8 +56,11 @@ sv = select(sv, cluster = hv001, strata = hv023, region = hv024, urban = hv025, 
 # aggregate to cluster level and add h3 index
 cl = group_by(sv, cluster, strata, region, urban, lon, lat)
 cl = summarise(cl, n = n(), npos = sum(mtest), nneg = n - npos, intercept = 1, .groups = "drop")
-cl$h3_index = h3::geo_to_h3(c(cl$lat, cl$lon), res = 7)
+cl$h3_index = h3::geo_to_h3(c(cl$lat, cl$lon), res = 7L)
 
+
+sv$urban = forcats::fct_relevel(sv$urban, "rural")
+cl$urban = forcats::fct_relevel(cl$urban, "rural")
 
 # save
 save(sv, cl, nb, file = here("data", "processed", "mali", "surveydata.rda"))
