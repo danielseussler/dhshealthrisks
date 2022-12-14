@@ -25,6 +25,10 @@ res[model %in% c("A", "C"), upper := qBB(0.95, bd = n, mu = mu, sigma = sigma, l
 
 res[, coverage := ifelse((lower <= k) & (k <= upper), 1L, 0L)]
 
+res[model == "A", model := "Beta binomial"]
+res[model == "B", model := "Binomial"]
+res[model == "C", model := "Beta binomial with boosted trees"]
+
 # compute metrics 
 tab = res[, .(bias = mean(k/n - mu), mae = mae(k/n, mu), rmse = rmse(k/n, mu), coverage = mean(coverage)), by = .(model)]
 
