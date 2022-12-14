@@ -72,7 +72,6 @@ patch.spatial = wrap_plots(plts.spatial, ncol = 2L) + plot_annotation(tag_levels
 ggsave(plot = patch.spatial, filename = "fig_mli_main_effects_spatial.png", path = here("results", "figures"), dpi = 600L, scale = 1.3, width = 200L, height = 100L, units = "mm", device = png, bg = "transparent")
 
 
-
 # do the maps for predictions
 N = 1000L
 
