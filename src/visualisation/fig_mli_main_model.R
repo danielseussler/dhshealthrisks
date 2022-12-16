@@ -41,13 +41,13 @@ table(selected(mod)$sigma)
 # plot partial effects panel
 plts = vector(mode = "list")
 
-plts$A = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "pop", .rugged = TRUE, .title = expression(mu), .xlab = "Population (log)")
-plts$B = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "precip", .rugged = TRUE, .title = expression(mu), .xlab = "Precipitation")
-plts$C = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "ndvi", .rugged = TRUE, .title = expression(mu), .xlab = "NDVI")
-plts$D = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "evi", .rugged = TRUE, .title = expression(mu), .xlab = "EVI")
-plts$E = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "elev", .rugged = TRUE, .title = expression(mu), .xlab = "Elevation")
-plts$G = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "lstnight", .rugged = TRUE, .title = expression(mu), .xlab = "LST (night)")
-plts$H = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "lstday", .rugged = TRUE, .title = expression(mu), .xlab = "LST (day)")
+plts$A = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "pop", .rugged = TRUE, .title = expression(logit(mu)), .xlab = "Population (log)")
+plts$B = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "precip", .rugged = TRUE, .title = expression(logit(mu)), .xlab = "Precipitation")
+plts$C = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "ndvi", .rugged = TRUE, .title = expression(logit(mu)), .xlab = "NDVI")
+plts$D = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "evi", .rugged = TRUE, .title = expression(logit(mu)), .xlab = "EVI")
+plts$E = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "elev", .rugged = TRUE, .title = expression(logit(mu)), .xlab = "Elevation")
+plts$G = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "lstnight", .rugged = TRUE, .title = expression(logit(mu)), .xlab = "LST (night)")
+plts$H = plt_numeric(.mod = mod, .data = cl, .parameter = "mu", .var = "lstday", .rugged = TRUE, .title = expression(logit(mu)), .xlab = "LST (day)")
 
 patch = wrap_plots(plts, ncol = 2L) + plot_annotation(tag_levels = "A")
 ggsave(plot = patch, filename = "fig_mli_main_effects.png", path = here("results", "figures"), dpi = 600L, width = 210L, height = 210L, units = "mm", device = png, bg = "transparent")
@@ -63,9 +63,9 @@ coef(mod, parameter = "sigma", which = "urban")$`bols(urban)`
 
 # do the spatial partial effect plots
 plts.spatial = vector(mode = "list")
-plts.spatial$mu = plt_spatial_s(.mod = mod, .data = cl, .parameter = "mu", .shp = shp, .limscol = c(-4.4, 4), .title = expression(mu))
+plts.spatial$mu = plt_spatial_s(.mod = mod, .data = cl, .parameter = "mu", .shp = shp, .limscol = c(-4.4, 4), .title = expression(logit(mu)))
 plts.spatial$mu = plts.spatial$mu + theme(legend.position = "none")
-plts.spatial$sigma = plt_spatial_s(.mod = mod, .data = cl, .parameter = "sigma", .shp = shp, .limscol = c(-4.4, 4), .title = expression(sigma))
+plts.spatial$sigma = plt_spatial_s(.mod = mod, .data = cl, .parameter = "sigma", .shp = shp, .limscol = c(-4.4, 4), .title = expression(log(sigma)))
 plts.spatial$sigma = plts.spatial$sigma + theme(axis.text.y = element_blank(), axis.title.y = element_blank())
 patch.spatial = wrap_plots(plts.spatial, ncol = 2L) + plot_annotation(tag_levels = "A")
 
@@ -76,8 +76,10 @@ ggsave(plot = patch.spatial, filename = "fig_mli_main_effects_spatial.png", path
 N = 1000L
 
 pred$mean = N * pred$mu
-pred$lower = qBB(p = 0.1, mu = pred$mu, sigma = pred$sigma.V1, bd = N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
-pred$upper = qBB(p = 0.9, mu = pred$mu, sigma = pred$sigma.V1, bd = N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
+pred$lower = qBB(p = 0.1, mu = pred$mu, sigma = pred$sigma, bd = N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
+pred$upper = qBB(p = 0.9, mu = pred$mu, sigma = pred$sigma, bd = N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
+
+write.csv(pred, file = here("results", "predictions", "malaria_risk.csv"))
 
 pred_sf = h3_to_geo_boundary_sf(pred$h3_index)
 pred_sf = cbind(pred_sf, pred)
