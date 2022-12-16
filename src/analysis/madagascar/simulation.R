@@ -1,7 +1,7 @@
 # simulation study
 #
-# draw repeated 2:1 train test splits - survey stratified cluster sampling
-# compare ....
+# draw repeated 2:1 initial splits and test the out-of-sample performance (on average) of 
+# different resampling strategies
 
 library(here)
 library(mboost)
@@ -15,14 +15,17 @@ load(file = here("data", "processed", "madagascar", "surveydata.rda"))
 source(file = here("src", "analysis", "madagascar", "formula.R"))
 
 ITER = 100L # simulation interations
-MSTOP = 1000L # max boosting iterations
-
+MSTOP = 2000L # max boosting iterations
+frml = frml.1
 
 # holdout folds: 1/3
+# ideally one should not drop one strata from the analysis, but to conduct the
+# resampling at least three clusters within a strata are required
+
 sv = subset(sv, strata != 2L) |> droplevels()
 sv = transform(sv, household = paste(cluster, household, sep = "_"))
-holdout.1 = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = "cluster"))
-holdout.2 = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = NULL))
+holdout.A = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = "cluster"))
+holdout.B = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = NULL))
 
 
 # hyperparam selection by resampling strategies
@@ -30,16 +33,16 @@ holdout.2 = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clust
 
 sim.rs = function(.type, .B, .strata, .holdout, .iter) {
 
-  .innerfold = switch(.holdout, "A" = holdout.1, "B" = holdout.2)
+  initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
 
-  dtrain = sv[which(.innerfold[, .iter] != 3L), ]
-  dtest = sv[which(.innerfold[, .iter] == 3L), ]
+  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
+  dtest = sv[which(initialSplit[, .iter] == 3L), ]
 
   mod = gamboost(
-    formula = frml.2
+    formula = frml
     , data = dtrain
-    , family = Binomial(link = "logit")
-    , control = boost_control(mstop = MSTOP, nu = 0.1, trace = FALSE)
+    , family = Binomial(type = "glm", link = "logit")
+    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
   )
 
   folds = switch(.strata,
@@ -87,16 +90,16 @@ res.rs = pmap(bench, ~ sim.rs(..1, ..2, ..3, ..4, ..5))
 
 sim.sv = function(.cluster, .rep, .k, .holdout, .iter) {
 
-  .innerfold = switch(.holdout, "A" = holdout.1, "B" = holdout.2)
+  initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
 
-  dtrain = sv[which(.innerfold[, .iter] != 3L), ]
-  dtest = sv[which(.innerfold[, .iter] == 3L), ]
+  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
+  dtest = sv[which(initialSplit[, .iter] == 3L), ]
 
   mod = gamboost(
-    formula = frml.2
+    formula = frml
     , data = dtrain
-    , family = Binomial(link = "logit")
-    , control = boost_control(mstop = MSTOP, nu = 0.1, trace = FALSE)
+    , family = Binomial(type = "glm", link = "logit")
+    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
   )
 
   # there are different options here. we can draw two-folds at most, as the min
@@ -142,26 +145,28 @@ bench$.iter = rep(1:ITER, each = nrow(bench) / ITER)
 res.sv = pmap(bench, ~ sim.sv(..1, ..2, ..3, ..4, ..5))
 
 
-# adaption of subsampling to the cluster sampling, important for the stability
-# selection later
+# adaption of subsampling to the cluster sampling, important for the stability selection later
+# this is equal to repeated 2-fold draws, trained on one fold and tested on second
 
 sim.ss = function(.holdout, .iter) {
 
-  .innerfold = switch(.holdout, "A" = holdout.1, "B" = holdout.2)
+  initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
 
-  dtrain = sv[which(.innerfold[, .iter] != 3L), ]
-  dtest = sv[which(.innerfold[, .iter] == 3L), ]
+  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
+  dtest = sv[which(initialSplit[, .iter] == 3L), ]
 
   mod = gamboost(
-    formula = frml.2
+    formula = frml
     , data = dtrain
-    , family = Binomial(link = "logit")
-    , control = boost_control(mstop = MSTOP, nu = 0.1, trace = FALSE)
+    , family = Binomial(type = "glm", link = "logit")
+    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
   )
 
-  folds.ss = 1L * as.matrix(1L == replicate(25L, folds.svy(dtrain, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
-
-  cv = cvrisk(object = mod, folds = folds.ss)
+  cv = cvrisk(
+    object = mod
+    , folds = 1L * as.matrix(1L == replicate(25L, folds.svy(dtrain, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
+  )
+  
   mod[mstop(cv)]
 
   dt = data.table(
@@ -185,8 +190,53 @@ bench = data.frame(.holdout = c("A", "B"), .iter = rep(1:ITER, each = 2L))
 res.ss = pmap(bench, ~ sim.ss(..1, ..2))
 
 
+
+# last, check out of region sample
+
+sim.re = function(.holdout, .iter) {
+  
+  initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
+  
+  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
+  dtest = sv[which(initialSplit[, .iter] == 3L), ]
+  
+  mod = gamboost(
+    formula = frml
+    , data = dtrain
+    , family = Binomial(type = "glm", link = "logit")
+    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
+  )
+  
+  svyregions = unique(dtrain$region)
+  foldsMat = matrix(data = 1L, nrow = nrow(dtrain), ncol = length(svyregions))
+  for(i in 1:ncol(foldsMat)) foldsMat[dtrain$region == svyregions[i], i] = 0L
+  
+  cv = cvrisk(object = mod, folds = foldsMat)
+  
+  mod[mstop(cv)]
+  
+  dt = data.table(
+    holdout = .holdout
+    , type = "regional cv"
+    , nfold = 1L
+    , nrep = 1L
+    , cvstrat = "none"
+    , iter = .iter
+    , mstop = mstop(cv)
+    , ncoef = length(names(coef(mod)))
+    , strata = dtest$strata
+    , actual = dtest$hazx
+    , pred = c(predict(mod, newdata = dtest, type = "response"))
+  )
+  
+  return(dt)
+}
+
+bench = data.frame(.holdout = c("A", "B"), .iter = rep(1:ITER, each = 2L))
+res.re = pmap(bench, ~ sim.re(..1, ..2))
+
 # combine and save all predictions
-results = list(res.rs, res.sv, res.ss) |>
+results = list(res.rs, res.sv, res.ss, res.re) |>
   lapply(rbindlist) |>
   rbindlist()
 
