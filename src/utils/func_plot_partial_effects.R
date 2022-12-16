@@ -3,6 +3,8 @@
 #
 #
 
+# plot continuous effects
+
 plt_numeric = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL, .rugged = FALSE, .title = NULL, .xlab = NULL) {
 
   require(ggplot2)
@@ -16,6 +18,7 @@ plt_numeric = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL, .rugg
   names(x) = .var
   y = rowSums(predict(.mod, which = bls, newdata = x))
 
+  #tmp = data.frame(x = x[, .var], y = y) # but why mean centered?
   tmp = data.frame(x = x[, .var], y = y - mean(y)) # but why mean centered?
   plt = ggplot(data = tmp, mapping = aes(x = x, y = y)) +
     geom_line(color = "black", linewidth = 1L) +
@@ -30,6 +33,7 @@ plt_numeric = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL, .rugg
 }
 
 
+# plot bivariate smooth effects
 
 plt_spatial_s = function(.mod, .data, .parameter = NULL, .var = c("lon", "lat"), .shp, .res = 5L, .limscol = NULL, .title = NULL) {
 
@@ -68,8 +72,42 @@ plt_spatial_s = function(.mod, .data, .parameter = NULL, .var = c("lon", "lat"),
 }
 
 
+# plot estimated GMRF effects
+
+plt_gmrf = function(.mod, .data, .parameter = NULL, .var, .shp, .limscol = NULL, .title = NULL) {
+  
+  require(ggplot2)
+  require(sf)
+  require(mboost)
+  require(viridis)
+  
+  if (!is.null(.parameter)) .mod <- .mod[[.parameter]]
+  
+  labels = levels(.data[, .var])
+  coefs = coef(.mod, which = .var)[[1]]
+  
+  shp = dplyr::arrange(shp, DHSREGEN)
+  coefs = coefs[order(names(coefs))]
+  
+  if(any(shp$DHSREGEN != names(coefs))) stop("region names not compatible")
+  
+  shp$coef = coefs
+
+  plt = ggplot(data = shp) +
+    geom_sf(aes(fill = coef), color = NA) +
+    scale_fill_viridis_c(name = expression(f[GMRF]), limits = .limscol) +
+    labs(x = "Longitude", y = "Latitude")
+  
+  if (!is.null(.title)) plt = plt + ggtitle(.title) + theme(plot.title = element_text(hjust = 0.5))
+  
+  return(plt)
+}
+
+
 
 plt_categorical = function(.mod, .data, .parameter = NULL, .var, .ylim = NULL) {
 
+  
+  
   return(invisible(NULL))
 }
