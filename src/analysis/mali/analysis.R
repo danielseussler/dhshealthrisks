@@ -58,10 +58,9 @@ mod[mstop(cv)]
 
 # predictions on country level grid
 pred = predict(mod, newdata = grid, type = "response")
-pred = data.table(h3_index = grid$h3_index, mu = pred$mu, sigma = pred$sigma)
+pred = data.table(h3_index = grid$h3_index, mu = pred$mu, sigma = c(pred$sigma))
 
 save(cl, mod, pred, file = here("models", "9dkw7wyn.rda"))
-
 
 
 
