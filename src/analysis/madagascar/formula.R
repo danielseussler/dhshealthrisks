@@ -58,13 +58,13 @@ frml.2 = hazf ~
   bols(car) + bols(car, by = csex) +
   bols(fews) + bols(fews, by = csex) +
 
-  bols(cage) + bols(cage, by = csex) + bbs(cage, center = TRUE, df = 1, knots = 20, boundary.knots = list(0, 60)) +
-  bols(mage) + bols(mage, by = csex) + bbs(mage, center = TRUE, df = 1, knots = 20, boundary.knots = list(15, 60)) +
-  bols(medu) + bols(medu, by = csex) + bbs(medu, center = TRUE, df = 1, knots = 20, boundary.knots = list(0, 15)) +
+  bols(cage) + bols(cage, by = csex) + bbs(cage, center = TRUE, df = 1, knots = 20) + bbs(cage, by = csex, center = TRUE, df = 1, knots = 20) +
+  bols(mage) + bols(mage, by = csex) + bbs(mage, center = TRUE, df = 1, knots = 20) +  bbs(mage, by = csex, center = TRUE, df = 1, knots = 20) +
+  bols(medu) + bols(medu, by = csex) + bbs(medu, center = TRUE, df = 1, knots = 20) + bbs(medu, by = csex, center = TRUE, df = 1, knots = 20) +
   bols(healthaccess) + bols(healthaccess, by = csex) + bbs(healthaccess, center = TRUE, df = 1, knots = 20) + bbs(healthaccess, by = csex, center = TRUE, df = 1, knots = 20) +
   bols(cityaccess) + bols(cityaccess, by = csex) + bbs(cityaccess, center = TRUE, df = 1, knots = 20) + bbs(cityaccess, by = csex, center = TRUE, df = 1, knots = 20) +
 
-  bmrf(dhsregion, bnd = nb)
+  bmrf(dhsregion, bnd = nb) + bmrf(dhsregion, bnd = nb, by = csex)
 
 
 frml.3 = hazf ~
@@ -91,13 +91,13 @@ frml.3 = hazf ~
   bols(car) + bols(car, by = urban) +
   bols(fews) +  bols(fews, by = urban) +
 
-  bols(cage) + bols(cage, by = urban) + bbs(cage, center = TRUE, df = 1, knots = 20, boundary.knots = list(0, 60)) +
-  bols(mage) + bols(mage, by = urban) + bbs(mage, center = TRUE, df = 1, knots = 20, boundary.knots = list(15, 60)) +
-  bols(medu) + bols(mage, by = urban) + bbs(medu, center = TRUE, df = 1, knots = 20, boundary.knots = list(0, 15)) +
+  bols(cage) + bols(cage, by = urban) + bbs(cage, center = TRUE, df = 1, knots = 20) + bbs(cage, by = urban, center = TRUE, df = 1, knots = 20) +
+  bols(mage) + bols(mage, by = urban) + bbs(mage, center = TRUE, df = 1, knots = 20) + bbs(mage, by = urban, center = TRUE, df = 1, knots = 20) +
+  bols(medu) + bols(mage, by = urban) + bbs(medu, center = TRUE, df = 1, knots = 20) + bbs(medu, by = urban, center = TRUE, df = 1, knots = 20) +
   bols(healthaccess) + bols(healthaccess, by = urban) + bbs(healthaccess, center = TRUE, df = 1, knots = 20) + bbs(healthaccess, by = urban, center = TRUE, df = 1, knots = 20) +
   bols(cityaccess) + bols(cityaccess, by = urban) + bbs(cityaccess, center = TRUE, df = 1, knots = 20) + bbs(cityaccess, by = urban, center = TRUE, df = 1, knots = 20) +
 
-  bmrf(dhsregion, bnd = nb)
+  bmrf(dhsregion, bnd = nb) + bmrf(dhsregion, bnd = nb, by = urban)
 
 
 # frml.4 = hazf ~
@@ -124,9 +124,9 @@ frml.3 = hazf ~
 #   bols(car) + bols(car, by = csex) + bols(car, by = urban) +
 #   bols(fews) + bols(fews, by = csex) + bols(fews, by = urban) +
 # 
-#   bols(cage) + bols(cage, by = csex) + bols(cage, by = urban) + bbs(cage, center = TRUE, df = 1, knots = 20, boundary.knots = list(0, 60)) +
-#   bols(mage) + bols(mage, by = csex) + bols(mage, by = urban) + bbs(mage, center = TRUE, df = 1, knots = 20, boundary.knots = list(15, 60)) +
-#   bols(medu) + bols(medu, by = csex) + bols(mage, by = urban) + bbs(medu, center = TRUE, df = 1, knots = 20, boundary.knots = list(0, 15)) +
+#   bols(cage) + bols(cage, by = csex) + bols(cage, by = urban) + bbs(cage, center = TRUE, df = 1, knots = 20) +
+#   bols(mage) + bols(mage, by = csex) + bols(mage, by = urban) + bbs(mage, center = TRUE, df = 1, knots = 20) +
+#   bols(medu) + bols(medu, by = csex) + bols(mage, by = urban) + bbs(medu, center = TRUE, df = 1, knots = 20) +
 #   bols(healthaccess) + bols(healthaccess, by = urban) + bols(healthaccess, by = csex) + bbs(healthaccess, center = TRUE, df = 1, knots = 20) +
 #   bols(cityaccess) + bols(cityaccess, by = urban) + bols(cityaccess, by = csex) + bbs(cityaccess, center = TRUE, df = 1, knots = 20) +
 # 
