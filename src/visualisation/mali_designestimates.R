@@ -10,6 +10,7 @@ library(ggplot2)
 library(viridis)
 require(rdhs)
 
+theme_set(theme_classic())
 
 # Coverage:
 # Population base: De facto children age 6-59 months (PR file)
@@ -62,7 +63,8 @@ results$region[results$region == "Rural"] = "Mali\n(Rural)"
 
 results$region = forcats::fct_reorder(results$region, results$hml35)
 
-theme_set(theme_classic())
+
+# plot
 
 plt = ggplot(data = results, mapping = aes(x = region, y = hml35)) +
   geom_pointrange(mapping = aes(ymin = ci_l, ymax = ci_u), position = position_dodge(width = 0.5)) +

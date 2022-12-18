@@ -9,11 +9,12 @@ library(ggplot2)
 library(viridis)
 library(Metrics)
 
-theme_set(theme_classic())
+theme_set(theme_bw())
 load(file = here("models", "88qlclkf.rda"))
 
 results[, predc := as.integer(pred >= 0.5)]
 results[, method := paste(type, "\n", nfold, "-folds ", nrep, "-rep", sep = "")]
+results = results[type != "regional cv"]
 
 metr = results[,
   .(ncoef = min(ncoef),
@@ -30,6 +31,9 @@ metr = results[,
 
 summary(metr)
 
+# k-fold fails to converge for some, in total these are only a selected few and therefore ignored
+metr[mstop == 2000 & method == "kfold\n10-folds 1-rep"]
+
 # results model complexity generalization error (true)
 tmp = melt(metr, id.vars = c("holdout", "method", "cvstrat"), measure.vars = c("ncoef", "mstop", "loss", "ce", "auc", "rec", "pre"))
 plt.1 = ggplot(tmp, aes(x = method, y = value, fill = cvstrat)) +
@@ -43,7 +47,8 @@ plt.1 = ggplot(tmp, aes(x = method, y = value, fill = cvstrat)) +
 ggsave(plot = plt.1, filename = "fig_mdg_simresults.png", path = here("results", "figures"), dpi = 600, scale = 0.9, width = 210, height = 297, units = "mm", device = png)
 
 
-
+# check if there are changes on strata level prediction improvement
+# but likely highly depends on how outcome is associated to the 
 metrStrata = results[,
                      .(ncoef = min(ncoef),
                        mstop = min(mstop),
