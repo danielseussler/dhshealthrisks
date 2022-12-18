@@ -43,24 +43,31 @@ mod[mstop(cv)]
 
 
 # check results from stability selection (not discussed in the report)
-# stab = stabsel(# FIXME
-#   x = mod
-#   , cutoff = 0.8
-#   , q = 10L
-#   , eval = TRUE
-#   , mstop = 2000L
-#   , sampling.type = "SS"
-#   , folds = subsample(model.weights(mod), B = 50L, strata = cl$strata)
-# )
-# 
-# plot(stab)
+# first compute number of learners overall 
+(length(attr(terms(frml.1$mu), "term.labels")) + length(attr(terms(frml.1$sigma), "term.labels")))
+
+stabsel_parameters(x = mod, p = 27, q = 15L, PFER = 1L, assumption = "unimodal")
+stabsel_parameters(x = mod, p = 27, q = 10L, PFER = 1L, assumption = "r-concave")
+stabsel_parameters(x = mod, p = 27, q = 10L, PFER = 1L, assumption = "none")
+
+stab = stabsel(
+  x = mod
+  , q = 15L
+  , PFER = 1L
+  , mstop = 1000L
+  , sampling.type = "SS"
+  , folds = subsample(model.weights(mod), B = 50L, strata = cl$strata)
+)
+
+plot(stab, type = "path")
+plot(stab, type = "maxsel")
 
 
 # predictions on country level grid
 pred = predict(mod, newdata = grid, type = "response")
 pred = data.table(h3_index = grid$h3_index, mu = pred$mu, sigma = c(pred$sigma))
 
-save(cl, mod, pred, file = here("models", "9dkw7wyn.rda"))
+save(cl, mod, pred, stab, file = here("models", "9dkw7wyn.rda"))
 
 
 
