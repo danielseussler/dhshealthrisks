@@ -113,12 +113,11 @@ stab.ns = stabsel(
   , folds = subsample(model.weights(mod), B = 50L, strata = NULL)
 )
 
-plot(stab, type = "maxsel", np = 20)
+plot(stab, type = "maxsel", np = 20, main = "Stability Selection")
 plot(stab.ns, type = "maxsel", np = 20)
 
 plot(stab, type = "path")
 plot(stab.ns, type = "path")
-
 
 save(mod, cv, cv.kfold, mod.deselect, mod.deselect.cum, stab, stab.ns, 
      file = here::here("models", "h9h7v919.rda"))
