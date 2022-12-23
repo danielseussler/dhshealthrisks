@@ -6,11 +6,10 @@
 library(here)
 library(dplyr)
 
-
+# data
 load(file = here("data", "processed", "mali", "surveydata.rda"))
 load(file = here("data", "processed", "mali", "geodata.rda"))
-cl = dplyr::left_join(cl, cloc)
-
+cl = left_join(cl, cloc)
 
 # survey infos
 n_distinct(sv$strata)
