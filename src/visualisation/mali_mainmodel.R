@@ -63,24 +63,19 @@ coef(mod, parameter = "sigma", which = "urban")$`bols(urban)`
 
 # do the spatial partial effect plots
 plts.spatial = vector(mode = "list")
+
 plts.spatial$mu = plt_spatial_s(.mod = mod, .data = cl, .parameter = "mu", .shp = shp, .limscol = c(-4.4, 4), .title = expression(logit(mu)))
-plts.spatial$mu = plts.spatial$mu + theme(legend.position = "none")
+plts.spatial$mu = plts.spatial$mu + theme_void() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5))
+
 plts.spatial$sigma = plt_spatial_s(.mod = mod, .data = cl, .parameter = "sigma", .shp = shp, .limscol = c(-4.4, 4), .title = expression(log(sigma)))
-plts.spatial$sigma = plts.spatial$sigma + theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+plts.spatial$sigma = plts.spatial$sigma + theme_void() + theme(plot.title = element_text(hjust = 0.5))
+
 patch.spatial = wrap_plots(plts.spatial, ncol = 2L) + plot_annotation(tag_levels = "A")
 
 ggsave(plot = patch.spatial, filename = "fig_mli_main_effects_spatial.png", path = here("results", "figures"), dpi = 600L, scale = 1.3, width = 200L, height = 100L, units = "mm", device = png, bg = "transparent")
 
 
-# do the maps for predictions
-N = 1000L
-
-pred$mean = N * pred$mu
-pred$lower = qBB(p = 0.1, mu = pred$mu, sigma = pred$sigma, bd = N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
-pred$upper = qBB(p = 0.9, mu = pred$mu, sigma = pred$sigma, bd = N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
-
-write.csv(pred, file = here("results", "predictions", "malaria_risk.csv"))
-
+# plot the maps for the predicted params of the response distribution
 pred_sf = h3_to_geo_boundary_sf(pred$h3_index)
 pred_sf = cbind(pred_sf, pred)
 
@@ -99,24 +94,59 @@ plts.preds.mean = ggplot(data = pred_sf) +
       , title.position = "top"
       , title.hjust = 0.5
     )
-  ) + theme_void() +
+  ) + 
+  theme_void() +
   theme(legend.position = "bottom")
 
+ggsave(plot = plts.preds.mean, filename = "fig_mli_main_predicted.png", path = here("results", "figures"), dpi = 600L, width = 200L, height = 200L, units = "mm", device = png, bg = "transparent")
 
-plts.preds = vector(mode = "list")
 
-plts.preds$B = ggplot(data = pred_sf) +
+plts.preds.sigma = ggplot(data = pred_sf) +
+  geom_sf(mapping = aes(fill = sigma), color = NA) +
+  scale_fill_continuous(
+    type = "viridis"
+    , option = "cividis"
+    , name = expression(hat(sigma))
+    , limits = c(0, 0.5)
+  ) + 
+  theme_void()  
+
+ggsave(plot = plts.preds.sigma, filename = "fig_mli_main_predicted_sigma.png", path = here("results", "figures"), dpi = 600L, width = 200L, height = 100L, units = "mm", device = png, bg = "transparent")
+
+
+
+
+# do the uncertainty plots for the appendix
+plts.ucq = vector(mode = "list")
+
+plts.ucq$lower = ggplot(data = pred_sf) +
   geom_sf(mapping = aes(fill = lower), color = NA) +
   scale_fill_viridis(option = "cividis", limits = c(0L, 1000L)) +
-  labs(x = "Longitude", y = "Latitude", title = "10%-Quantile") +
-  theme(legend.position = "none")
+  labs(title = "5%-Quantile") +
+  theme_void() +
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) 
 
-plts.preds$C = ggplot(data = pred_sf) +
+plts.ucq$upper = ggplot(data = pred_sf) +
   geom_sf(mapping = aes(fill = upper), color = NA) +
-  scale_fill_viridis(option = "cividis", limits = c(0L, 1000L), name = "Estimated Prevalence\nper 1000") +
-  labs(x = "Longitude", y = "Latitude", title = "90%-Quantile")
+  scale_fill_continuous(
+    type = "viridis"
+    , option = "cividis"
+    , name = "Estimated Prevalence per 1000"
+    , limits = c(0L, 1000L)
+    , guide = guide_colorbar(
+      direction = "horizontal"
+      , barheight = unit(2L, units = "mm")
+      , barwidth = unit(50, units = "mm")
+      , label.hjust = 0L
+      , title.position = "top"
+      , title.hjust = 0.5
+    )
+  ) + 
+  labs(title = "95%-Quantile") +  
+  theme_void() +
+  theme(legend.position = "bottom", plot.title = element_text(hjust = 0.5))
+ 
 
-patch.preds = wrap_plots(plts.preds, ncol = 2L) + plot_annotation(tag_levels = "A")
+patch.ucq = wrap_plots(plts.ucq, ncol = 1L) + plot_annotation(tag_levels = "A")
 
-ggsave(plot = plts.preds.mean, filename = "fig_mli_main_predicted.png", path = here("results", "figures"), dpi = 600L, width = 200L, height = 200L, units = "mm", device = png, bg = "transparent")
-ggsave(plot = patch.preds, filename = "fig_mli_main_uncertainty.png", path = here("results", "figures"), dpi = 600L, scale = 1.3, width = 200L, height = 80L, units = "mm", device = png, bg = "transparent")
+ggsave(plot = patch.ucq, filename = "fig_mli_main_uncertainty.png", path = here("results", "figures"), dpi = 600L, scale = 1.3, width = 200L, height = 260L, units = "mm", device = png, bg = "transparent")
