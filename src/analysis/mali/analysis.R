@@ -1,4 +1,4 @@
-# analysis
+# 
 #
 #
 #
@@ -18,13 +18,14 @@ source(file = here("src", "analysis", "mali", "formula.R"))
 
 cl = dplyr::left_join(cl, cloc)
 cl = dplyr::mutate(cl, pop = log(pop + 1.0))
-
-# define outcome
-y = matrix(c(cl$npos, cl$nneg), ncol = 2L)
+y = matrix(c(cl$npos, cl$nneg), ncol = 2L) # binomial outcome
 
 
+
+# model
 # fit distributional boosting model with beta binomial distribution
-# resampling based on survey stratified folds
+# resampling based on survey stratified folds subsampling the data
+
 mod = gamboostLSS(
   formula = frml.1
   , data = cl
@@ -39,51 +40,23 @@ cv = cvrisk(
   , folds = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = cl$strata)
 )
 
+plot(cv)
 mod[mstop(cv)]
 
 
-# check results from stability selection (not discussed in the report)
-# first compute number of learners overall 
-(length(attr(terms(frml.1$mu), "term.labels")) + length(attr(terms(frml.1$sigma), "term.labels")))
-
-stabsel_parameters(x = mod, p = 27, q = 15L, PFER = 1L, assumption = "unimodal")
-stabsel_parameters(x = mod, p = 27, q = 10L, PFER = 1L, assumption = "r-concave")
-stabsel_parameters(x = mod, p = 27, q = 10L, PFER = 1L, assumption = "none")
-
-stab = stabsel(
-  x = mod
-  , q = 15L
-  , PFER = 1L
-  , mstop = 1000L
-  , sampling.type = "SS"
-  , folds = subsample(model.weights(mod), B = 50L, strata = cl$strata)
-)
-
-plot(stab, type = "path")
-plot(stab, type = "maxsel")
-
 
 # predictions on country level grid
+# add quantiles of the predicted response distributin at 90%
+
 pred = predict(mod, newdata = grid, type = "response")
-pred = data.table(h3_index = grid$h3_index, mu = pred$mu, sigma = c(pred$sigma))
+pred = data.table(h3_index = grid$h3_index, mu = pred$mu, sigma = c(pred$sigma), N = 1000L)
 
-save(cl, mod, pred, stab, file = here("models", "9dkw7wyn.rda"))
+pred$mean = pred$N * pred$mu
+pred$lower = qBB(p = 0.05, mu = pred$mu, sigma = pred$sigma, bd = pred$N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
+pred$upper = qBB(p = 0.95, mu = pred$mu, sigma = pred$sigma, bd = pred$N, lower.tail = TRUE, log.p = FALSE, fast = TRUE)
 
 
 
-# # also fit a binomial model to compare the predictive distributions
-# mod.binom = gamboost(
-#   formula = frml.1$mu
-#   , data = cl
-#   , family = Binomial(type = "glm")
-#   , control = boost_control(mstop = 1000L, nu = 0.25, trace = TRUE)
-# )
-# 
-# cv.binom = cvrisk(
-#   object = mod.binom 
-#   , folds = cv(weights = model.weights(mod.binom), type = "subsampling", strata = cl$strata)
-# )
-# 
-# mod.binom[mstop(cv.binom)]
-# 
-# save(cl, mod, mod.binom, file = here("models", "fg5kpezg.rda"))
+# save data
+fwrite(pred, file = here("results", "predictions", "malaria_risk.csv"))
+save(cl, mod, cv, pred, file = here("models", "9dkw7wyn.rda"))
