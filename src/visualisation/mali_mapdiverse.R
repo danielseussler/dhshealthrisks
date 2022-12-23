@@ -13,6 +13,8 @@ theme_set(theme_void())
 load(file = here("data", "processed", "mali", "surveydata.rda"))
 shp = readRDS(file = here("data", "processed", "mali", "dhsboundaries.rds"))
 
+
+# data
 cl_sf = st_as_sf(cl, coords = c("lon", "lat"), crs = st_crs(4326))
 cl_sf$prev = cl_sf$npos / cl_sf$n
 
@@ -40,12 +42,12 @@ plt.1 = ggplot() +
 
 plt.2 = ggplot() +
   geom_raster(data = climzone_df, mapping = aes(x = x, y = y, fill = label)) +
-  # scale_fill_manual(values = c("#46AAFA", "#FF0000", "#F5A500"), na.value = "transparent", na.translate = F, name = "") +
-  scale_fill_grey(na.value = "transparent", na.translate = F, name = "", start = 0.4, end = 0.8) +
+  scale_fill_manual(values = c("#46AAFA", "#FF0000", "#F5A500"), na.value = "transparent", na.translate = F, name = "") +
+  #scale_fill_grey(na.value = "transparent", na.translate = F, name = "", start = 0.4, end = 0.8) +
   geom_sf(data = shp, fill = NA) +
-  geom_sf(data = cl_sf) +
+  geom_sf(data = cl_sf, size = 0.7) +
   theme(legend.position = "bottom")
 
 
-ggsave(plot = plt.1, filename = "fig_mli_map_clusterprev.png", path = here("results", "figures"), dpi = 600, width = 200, height = 200, units = "mm", device = png)
-ggsave(plot = plt.2, filename = "fig_mli_map_climatezones.png", path = here("results", "figures"), dpi = 600, width = 200, height = 200, units = "mm", device = png)
+ggsave(plot = plt.1, filename = "fig_mli_clusterprev.png", path = here("results", "figures"), dpi = 600, width = 200, height = 200, units = "mm", device = png)
+ggsave(plot = plt.2, filename = "fig_mli_climatezones.png", path = here("results", "figures"), dpi = 600, width = 200, height = 200, units = "mm", device = png)
