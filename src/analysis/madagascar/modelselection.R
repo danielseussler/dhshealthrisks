@@ -46,7 +46,8 @@ sim.1 = function(.model = NULL, .formula = NULL, .iter = NULL) {
 
   cv = cvrisk(
     object = mod
-    , folds = 1L * as.matrix(1L == replicate(NUMSS, folds.svy(training, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
+    , grid = seq(from = 25L, to = mstop(mod), by = 10L)
+    , folds = cv(weights = model.weights(mod), type = "subsampling", strata = training$strata)
   )
 
   mod[mstop(cv)]
@@ -62,7 +63,7 @@ sim.1 = function(.model = NULL, .formula = NULL, .iter = NULL) {
   return(dt)
 }
 
-res.1 = map_with_progress(1:FOLDS, ~ sim.1("A", frml.1, .))
+res.1 = map_with_progress(1:FOLDS, ~ sim.1("A", frml.1, .)) # base model
 res.2 = map_with_progress(1:FOLDS, ~ sim.1("B", frml.2, .)) # with gendered effects
 res.3 = map_with_progress(1:FOLDS, ~ sim.1("C", frml.3, .)) # with urban effects
 
@@ -78,15 +79,16 @@ sim.tree = function(.model = NULL, .formula = NULL, .iter = NULL) {
     formula = .formula
     , data = training
     , family = Binomial(type = "glm", link = "logit")
-    , control = boost_control(mstop = 500L, nu = 0.01, trace = FALSE)
+    , control = boost_control(mstop = 1000L, nu = 0.1, trace = FALSE)
     , tree_controls = partykit::ctree_control(maxdepth = 4L, saveinfo = FALSE)
   )
 
   cv = cvrisk(
     object = mod
-    , folds = 1L * as.matrix(1L == replicate(NUMSS, folds.svy(training, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
+    , grid = seq(from = 25L, to = mstop(mod), by = 10L)
+    , folds = cv(weights = model.weights(mod), type = "kfold", strata = training$strata)
   )
-
+  
   mod[mstop(cv)]
 
   dt = data.table(
