@@ -1,6 +1,6 @@
-# create country shape files from GADM database and DHS survey files
-#
-#
+# get shapefiles
+# source: GADM and DHS spatial data repository
+# 
 #
 
 library(here)
