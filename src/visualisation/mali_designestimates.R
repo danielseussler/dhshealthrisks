@@ -65,11 +65,10 @@ results$region = forcats::fct_reorder(results$region, results$hml35)
 
 
 # plot
-
 plt = ggplot(data = results, mapping = aes(x = region, y = hml35)) +
   geom_pointrange(mapping = aes(ymin = ci_l, ymax = ci_u), position = position_dodge(width = 0.5)) +
   geom_abline(intercept = results[results$region == "Mali\n(total)", "hml35"], slope = 0, color = "gray") +
-  scale_y_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.4)) + 
   labs(x = "", y = "Prevalence") +
   scale_color_manual(values = viridis(n = 3, alpha = 0.8, begin = 0.3, end = 0.7), name = "Type")
 
