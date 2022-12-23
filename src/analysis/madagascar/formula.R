@@ -1,4 +1,4 @@
-# formulas
+# model specification
 #
 #
 #
@@ -132,9 +132,9 @@ frml.3 = hazf ~
 # 
 #   bmrf(dhsregion, bnd = nb)
 
+
 frml.tree = hazf ~ denom + urban + csex + ctwin + cbord + hmembers + mreligion + 
   memployed + nodead + watersource + sanitation + wealth + electricity + radio + 
   television + refrigerator + bicycle + motorcycle + car + fews + cage + mage + 
   medu + healthaccess + cityaccess + dhsregion
  
-  
