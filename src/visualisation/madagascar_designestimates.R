@@ -80,7 +80,7 @@ plt = ggplot(data = results, mapping = aes(x = region, y = ind)) +
   geom_abline(intercept = results[results$region == "Madagascar (total)", "ind"], slope = 0, color = "gray") +
   labs(x = "", y = "Prevalence") +
   scale_color_manual(values = viridis(n = 3L, alpha = 0.8, begin = 0.3, end = 0.7), name = "Type") +
-  scale_y_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.7)) + 
   scale_shape(name = "Type") +
   theme(axis.text.x = element_text(angle = 45L, hjust = 1L))
 
