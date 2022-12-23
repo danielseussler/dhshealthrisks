@@ -1,5 +1,5 @@
+# rdhs 
 # load all required dhs files for later use and access them directly by filename
-#
 #
 #
 
@@ -8,24 +8,23 @@ library(data.table)
 
 
 # run dhs api setup
+# country selection
+# load available surveys for selected countries
+# check survey characteristics: Anthropometry
 source(file = here("src", "configs", "rdhs.R"))
 
-
-# country selection
 mycountries = c("Ethiopia", "Madagascar", "Mali")
-
-
-# load available surveys for selected countries
 countries = rdhs::dhs_countries()
 cselected = countries[CountryName %in% mycountries, DHS_CountryCode]
 
-
-# survey characteristics: Anthropometry
 surveychar = rdhs::dhs_survey_characteristics()
 surveychar[grepl("Anthropometry", SurveyCharacteristicName, ignore.case = TRUE)]
 
 
 # survey selection
+# fileType is PR Household Member Recode KR Children's Recode GE Geographic Data
+# https://dhsprogram.com/data/File-Types-and-Names.cfm
+
 surveys = rdhs::dhs_surveys(
   countryIds = cselected
   , surveyType = c("DHS", "MIS")
@@ -36,9 +35,6 @@ surveys = rdhs::dhs_surveys(
 surveys[, .(SurveyId, CountryName, SurveyYear, NumberOfWomen, SurveyNum, FieldworkEnd)]
 surveys = surveys[SurveyId %in% c("ET2019DHS", "MD2021DHS", "ML2021MIS")]
 
-
-# fileType is PR Household Member Recode KR Children's Recode GE Geographic Data
-# https://dhsprogram.com/data/File-Types-and-Names.cfm
 datasets = rdhs::dhs_datasets(surveyIds = surveys$SurveyId, fileType = c("PR", "KR", "GE"), fileFormat = "flat")
 datasets[, .(SurveyId, FileType, SurveyNum, FileDateLastModified, FileName)]
 
