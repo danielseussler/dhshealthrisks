@@ -16,7 +16,7 @@ load(file = here("data", "processed", "madagascar", "surveydata.rda"))
 source(file = here("src", "analysis", "madagascar", "formula.R"))
 source(file = here("src", "utils", "func_purrr_progress.R"))
 
-ITER = 100L # simulation interations
+ITER = 100L   # simulation interations
 MSTOP = 2000L # max boosting iterations
 frml = frml.1
 
@@ -29,6 +29,14 @@ sv = subset(sv, strata != 2L) |> droplevels()
 sv = transform(sv, household = paste(cluster, household, sep = "_"))
 holdout.A = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = "cluster"))
 holdout.B = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = NULL))
+
+
+get_regionalcv = function(.data){
+  svyregions = unique(.data$region)
+  foldsMat = matrix(data = 1L, nrow = nrow(.data), ncol = length(svyregions))
+  for(i in 1:ncol(foldsMat)) foldsMat[.data$region == svyregions[i], i] = 0L
+  return(foldsMat)
+}
 
 
 # define simulation, estimate holdout risk and cv risk for sampled boosting iteration and fixed
@@ -55,7 +63,8 @@ sim = function(.type, .iter, .mstop, .holdout) {
     "bootstrap" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = NULL),
     "bootstrap stratified" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = trainingData$strata),
     "subsampling" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = NULL),
-    "subsampling survey cluster" = 1L * as.matrix(1L == replicate(25L, folds.svy(trainingData, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
+    "subsampling survey cluster" = 1L * as.matrix(1L == replicate(25L, folds.svy(trainingData, nfolds = 2L, strataID = "strata", clusterID = "cluster"))),
+    "regional cv" = get_regionalcv(trainingData)
   )
 
   cv = cvrisk(object = mod, grid = .mstop, folds = cvFolds) 
@@ -80,12 +89,32 @@ sim = function(.type, .iter, .mstop, .holdout) {
 
 # sample stopping times
 # gamboostLSS::make.grid(MSTOP, length.out = 200, min = 100, log = TRUE)
+drawnSample = sample(x = 0:MSTOP, size = ITER, replace = TRUE)
 
-bench = data.frame(.type = rep(c("k-fold", "k-fold stratified", "bootstrap", "bootstrap stratified", "subsampling", "subsampling survey cluster"), each = ITER), .iter = rep(1:ITER, 6L))
-bench$.mstop = sample(x = 0:MSTOP, size = nrow(bench), replace = TRUE)
+bench = data.frame(
+  .type = rep(c("k-fold", "k-fold stratified", "bootstrap", "bootstrap stratified", "subsampling", "subsampling survey cluster"), each = ITER), 
+  .iter = rep(1:ITER, 6L), 
+  .mstop = rep(drawnSample, 6L)
+)
 
 res.A = pmap_with_progress(bench, ~ sim(..1, ..2, ..3, "A")) |> rbindlist()
 res.B = pmap_with_progress(bench, ~ sim(..1, ..2, ..3, "B")) |> rbindlist()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 results = rbindlist(list(res.A, res.B))
 
 save(results, file = here("models", "nybm9n81.rda"))
