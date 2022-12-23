@@ -8,14 +8,12 @@ library(data.table)
 library(Metrics)
 library(ggplot2) 
 
-theme_set(theme_bw())
-
 load(file = here("models", "lvcw0a2q.rda"))
 
 res[, predc := as.integer(pred >= 0.5)]
 res[model == "A", name := "Base model"]
-res[model == "B", name := "Base model\n+ gendered effects"]
-res[model == "C", name := "Base model\n+ urbanicity effects"]
+res[model == "B", name := "Base model\n+ gender interaction"]
+res[model == "C", name := "Base model\n+ urbanicity interaction"]
 res[model == "D", name := "Boosted with\nregression trees"]
 
 metricsSummary = res[,
@@ -29,12 +27,21 @@ metricsSummary = res[,
                        , pre = precision(actual, predc)),
                      by = list(name, iter)]
 
-
-summary(metricsSummary)
+metricsSummary
 
 plt = ggplot(data = metricsSummary, mapping = aes(x = name, y = loss)) + 
   geom_line(mapping = aes(group = iter), color = "grey") + 
-  geom_boxplot(alpha = 0.5) + 
-  labs(x = "", y = "Loss")
+  geom_boxplot(alpha = 0.5, width = 0.5) + 
+  labs(x = "", y = "Average out-of-sample loss") +
+  theme_bw()
 
-ggsave(plot = plt, filename = "fig_mdg_modelselection.png", path = here("results", "figures"), scale = 1.2, dpi = 600, width = 200, height = 100, units = "mm", device = png)
+ggsave(
+  plot = plt
+  , filename = "fig_mdg_modelselection.png"
+  , path = here("results", "figures")
+  , dpi = 600
+  , width = 200
+  , height = 80
+  , units = "mm"
+  , device = png
+)
