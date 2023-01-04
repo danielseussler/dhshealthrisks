@@ -1,7 +1,7 @@
-# model selection 
+# model selection
 # by nested cross-validation
-# test on non-linearties and interactions with boosted trees
-# 
+# test on non-linearities and interactions with boosted trees
+#
 
 library(data.table)
 library(mboost)
@@ -60,9 +60,9 @@ sim.fml = function(.model = NULL, .formula = NULL, .iter = NULL) {
   return(dt)
 }
 
-res.1 = map_with_progress(1:numFolds, ~ sim.fml("A", frml.1, .)) # base model
-res.2 = map_with_progress(1:numFolds, ~ sim.fml("B", frml.2, .)) # with gendered effects
-res.3 = map_with_progress(1:numFolds, ~ sim.fml("C", frml.3, .)) # with urban effects
+res_1 = map_with_progress(1:numFolds, ~ sim.fml("A", frml.1, .)) # base model
+res_2 = map_with_progress(1:numFolds, ~ sim.fml("B", frml.2, .)) # with gendered effects
+res_3 = map_with_progress(1:numFolds, ~ sim.fml("C", frml.3, .)) # with urban effects
 
 
 # tree boosting to assess if higher order interactions are present in the data
@@ -85,7 +85,7 @@ sim.tree = function(.model = NULL, .formula = NULL, .iter = NULL) {
     , grid = seq(from = 25L, to = mstop(mod), by = 10L)
     , folds = cv(weights = model.weights(mod), type = "subsampling", B = numSS, strata = training$strata, prob = 0.8)
   )
-  
+
   dt = data.table(
     model = .model
     , iter = .iter
@@ -97,11 +97,11 @@ sim.tree = function(.model = NULL, .formula = NULL, .iter = NULL) {
   return(dt)
 }
 
-res.tree = map_with_progress(1:numFolds, ~ sim.tree("D", frml.tree, .))
+res_4 = map_with_progress(1:numFolds, ~ sim.tree("D", frml.tree, .))
 
 
 # combine and save all predictions
-res = list(res.1, res.2, res.3, res.tree) |>
+re = list(res_1, res_2, res_3, res_4) |>
   lapply(rbindlist) |>
   rbindlist()
 
