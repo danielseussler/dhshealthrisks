@@ -44,4 +44,4 @@ res = res[, .(bias = mean(k/n - mu), mae = mae(k/n, mu), rmse = rmse(k/n, mu), c
               coverage80 = mean(coverage80), coverage90 = mean(coverage90), coverage95 = mean(coverage95)), by = .(model)]
 
 # print table
-print(xtable(res, type = "latex"), file = file.path("results", "tables", "tab_mli_modelselection.tex"), include.rownames = FALSE)
+print(xtable(res, type = "latex"), file = file.path("results", "tables", "mali_modelselection.tex"), include.rownames = FALSE)
