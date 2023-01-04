@@ -3,12 +3,11 @@
 #
 #
 
-library(here)
 library(dplyr)
 
 # data
-load(file = here("data", "processed", "mali", "surveydata.rda"))
-load(file = here("data", "processed", "mali", "geodata.rda"))
+load(file = file.path("data", "processed", "mali", "surveydata.rda"))
+load(file = file.path("data", "processed", "mali", "geodata.rda"))
 cl = left_join(cl, cloc)
 
 # survey infos
