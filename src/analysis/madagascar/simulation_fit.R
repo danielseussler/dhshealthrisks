@@ -1,243 +1,183 @@
 # simulation study
 #
-# draw repeated 2:1 initial splits and test the out-of-sample performance (on average) of 
-# different resampling strategies
+#
+#
 
-library(here)
-library(mboost)
 library(data.table)
+library(mboost)
 library(surveyCV)
-library(purrr)
+library(Metrics)
 
 set.seed(seed = 1L)
 options("mc.cores" = detectCores())
-load(file = here("data", "processed", "madagascar", "surveydata.rda"))
-source(file = here("src", "analysis", "madagascar", "formula.R"))
 
-ITER = 100L # simulation interations
-MSTOP = 2000L # max boosting iterations
-frml = frml.1
+load(file = file.path("data", "processed", "madagascar", "surveydata.rda"))
+source(file = file.path("src", "analysis", "madagascar", "formula.R"))
+source(file = file.path("src", "utils", "func_purrr_progress.R"))
+
 
 # holdout folds: 1/3
 # ideally one should not drop one strata from the analysis, but to conduct the
 # resampling at least three clusters within a strata are required
 
+ITER = 50L # number of simulation interations
+
 sv = subset(sv, strata != 2L) |> droplevels()
 sv = transform(sv, household = paste(cluster, household, sep = "_"))
+
 holdout.A = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = "cluster"))
 holdout.B = replicate(ITER, folds.svy(sv, nfold = 3L, strataID = "strata", clusterID = NULL))
 
 
-# hyperparam selection by resampling strategies
-# cross-validation and bootstrap each with different number of folds / stratification
+# define simulation, estimate holdout risk and cv risk for sampled boosting iteration and fixed
+# resampling technique, evaluate cv at iteration only for comp. efficiency
 
-sim.rs = function(.type, .B, .strata, .holdout, .iter) {
+sv$moderatelyx = with(sv, ifelse(haz < -200, 1L, 0L))
+sv$moderatelyf = factor(sv$moderatelyx, levels = c(0L, 1L), labels = c("no", "yes"))
+
+sim = function(.type, .iter, .holdout) {
 
   initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
 
-  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
-  dtest = sv[which(initialSplit[, .iter] == 3L), ]
+  trainingData = sv[which(initialSplit[, .iter] != 3L), ]
+  testData = sv[which(initialSplit[, .iter] == 3L), ]
 
   mod = gamboost(
-    formula = frml
-    , data = dtrain
+    formula = update(frml.1, moderatelyf ~ .)
+    , data = trainingData
     , family = Binomial(type = "glm", link = "logit")
-    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
+    , control = boost_control(mstop = 3000L, nu = 0.25, trace = FALSE)
   )
 
-  folds = switch(.strata,
-    "none" = cv(weights = model.weights(mod), type = .type, B = .B, strata = NULL),
-    "survey strata" = cv(weights = model.weights(mod), type = .type, B = .B, strata = dtrain$strata))
+  cvFolds = switch(
+    .type
+    , "A" = cv(weights = model.weights(mod), type = "kfold", B = 5L, strata = NULL)
+    , "B" = cv(weights = model.weights(mod), type = "kfold", B = 5L, strata = trainingData$strata)
+    , "C" = cv(weights = model.weights(mod), type = "kfold", B = 10L, strata = NULL)
+    , "D" = cv(weights = model.weights(mod), type = "kfold", B = 10L, strata = trainingData$strata)
+    , "E" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = NULL)
+    , "F" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = trainingData$strata)
+    , "G" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = NULL)
+    , "H" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = trainingData$strata)
+    , "I" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = NULL)
+    , "J" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = trainingData$strata)
+    , "K" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = NULL, prob = 0.8)
+    , "L" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = trainingData$strata, prob = 0.8)
+    , "M" = 1L * as.matrix(1L == replicate(25, folds.svy(trainingData, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
+  )
 
-  cv = cvrisk(object = mod, folds = folds)
+  # extract  estimate and true risk over holdout set
+  grid = seq(from = 25L, to = mstop(mod), by = 25L)
+  cv_risk = cvrisk(object = mod, grid = grid, folds = cvFolds)
 
-  mod[mstop(cv)]
+  if (.type == "G" | .type == "H") {
+    # .632 rule for bootstrap
+    training_risk = risk(mod)[grid]
+    cv_risk = unname(colMeans(cv_risk))
+    cv_risk = 0.632 * cv_risk + 0.368 * (training_risk / nrow(trainingData))
+
+    stopping_time = grid[which.min(cv_risk)]
+  } else {
+    stopping_time = mstop(cv_risk)
+  }
 
   dt = data.table(
     holdout = .holdout
     , type = .type
-    , nfold = .B
-    , nrep = 1
-    , cvstrat = .strata
     , iter = .iter
-    , mstop = mstop(cv)
-    , ncoef = length(names(coef(mod)))
-    , strata = dtest$strata
-    , actual = dtest$hazx
-    , pred = c(predict(mod, newdata = dtest, type = "response"))
+    , mstop = stopping_time
+    , ncoef = length(names(coef(mod[stopping_time])))
+    , strata = testData$strata
+    , actual = testData$moderatelyx
+    , pred = c(predict(mod[stopping_time], newdata = testData, type = "response"))
   )
 
   return(dt)
 }
 
 bench = data.frame(
-  .type = c("bootstrap", "bootstrap", "kfold", "kfold", "subsampling", "subsampling"),
-  .B = c(25L, 25L, 10L, 10L, 25L, 25L),
-  .strata = c("survey strata", "none", "survey strata", "none", "survey strata", "none")
+  .type = rep(c("B", "D", "F", "J", "L", "M"), each = ITER)
+  , .iter = rep(1:ITER, 6L)
 )
 
-bench = do.call("rbind", replicate(2L, bench, simplify = FALSE))
-bench$.holdout = rep(c("A", "B"), each = nrow(bench) / 2)
-bench = do.call("rbind", replicate(ITER, bench, simplify = FALSE))
-bench$.iter = rep(1:ITER, each = nrow(bench) / ITER)
+res_a = pmap_with_progress(bench, ~ sim(..1, ..2, "A")) |> rbindlist()
+res_b = pmap_with_progress(bench, ~ sim(..1, ..2, "B")) |> rbindlist()
 
-res.rs = pmap(bench, ~ sim.rs(..1, ..2, ..3, ..4, ..5))
+res_moderately = rbindlist(list(res_a, res_b))
+save(res_moderately, file = file.path("models", "88qlclkf.rda"))
 
 
-# custom folds for survey structure, 2-fold stable possible with cluster selection,
-# we can additionally have cluster sampling partly of survey structure, namely
-# only by regions OR urban/rural indicator
+# repeat the same for severely stunted children
+sv$severelyx = with(sv, ifelse(haz < -300, 1L, 0L))
+sv$severelyf = factor(sv$severelyx, levels = c(0L, 1L), labels = c("no", "yes"))
 
-sim.sv = function(.cluster, .rep, .k, .holdout, .iter) {
+sim = function(.type, .iter, .holdout) {
 
   initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
 
-  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
-  dtest = sv[which(initialSplit[, .iter] == 3L), ]
+  trainingData = sv[which(initialSplit[, .iter] != 3L), ]
+  testData = sv[which(initialSplit[, .iter] == 3L), ]
 
   mod = gamboost(
-    formula = frml
-    , data = dtrain
+    formula = update(frml.1, severelyf ~ .)
+    , data = trainingData
     , family = Binomial(type = "glm", link = "logit")
-    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
+    , control = boost_control(mstop = 3000L, nu = 0.25, trace = FALSE)
   )
 
-  # there are different options here. we can draw two-folds at most, as the min
-  # count of clusters is 3 per stratum (one is already in the dtest set)
-  # as shown above 2-fold is likely to variable, so I do repeated 2-fold here to average
-  # over an larger number of folds. note: folds.svy returns vector of 1 2 1 2 -> transform for cv
+  cvFolds = switch(
+    .type
+    , "A" = cv(weights = model.weights(mod), type = "kfold", B = 5L, strata = NULL)
+    , "B" = cv(weights = model.weights(mod), type = "kfold", B = 5L, strata = trainingData$strata)
+    , "C" = cv(weights = model.weights(mod), type = "kfold", B = 10L, strata = NULL)
+    , "D" = cv(weights = model.weights(mod), type = "kfold", B = 10L, strata = trainingData$strata)
+    , "E" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = NULL)
+    , "F" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = trainingData$strata)
+    , "G" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = NULL)
+    , "H" = cv(weights = model.weights(mod), type = "bootstrap", B = 25L, strata = trainingData$strata)
+    , "I" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = NULL)
+    , "J" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = trainingData$strata)
+    , "K" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = NULL, prob = 0.8)
+    , "L" = cv(weights = model.weights(mod), type = "subsampling", B = 25L, strata = trainingData$strata, prob = 0.8)
+    , "M" = 1L * as.matrix(1L == replicate(25, folds.svy(trainingData, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
+  )
 
-  get_folds = function(.k, .strata, ...) {
-    f = folds.svy(dtrain, nfold = .k, strataID = "strata", clusterID = .cluster)
-    f = matrix(f, nrow = nrow(dtrain), ncol = .k, byrow = FALSE) != matrix(1:.k, nrow = nrow(dtrain), ncol = .k, byrow = TRUE)
-    return(f * 1L)
+  # extract  estimate and true risk over holdout set
+  grid = seq(from = 25L, to = mstop(mod), by = 25L)
+  cv_risk = cvrisk(object = mod, grid = grid, folds = cvFolds)
+
+  if (.type == "G" | .type == "H") {
+    # .632 rule for bootstrap
+    training_risk = risk(mod)[grid]
+    cv_risk = unname(colMeans(cv_risk))
+    cv_risk = 0.632 * cv_risk + 0.368 * (training_risk / nrow(trainingData))
+
+    stopping_time = grid[which.min(cv_risk)]
+  } else {
+    stopping_time = mstop(cv_risk)
   }
 
-  folds.cv = map(1:.rep, ~ get_folds(.k, .strata, .))
-  folds.cv = do.call("cbind", folds.cv)
-
-  cv = cvrisk(object = mod, folds = folds.cv)
-  mod[mstop(cv)]
-
   dt = data.table(
     holdout = .holdout
-    , type = "survey kfold"
-    , nfold = .k
-    , nrep = .rep
-    , cvstrat = "survey strata"
+    , type = .type
     , iter = .iter
-    , mstop = mstop(cv)
-    , ncoef = length(names(coef(mod)))
-    , strata = dtest$strata
-    , actual = dtest$hazx
-    , pred = c(predict(mod, newdata = dtest, type = "response"))
+    , mstop = stopping_time
+    , ncoef = length(names(coef(mod[stopping_time])))
+    , strata = testData$strata
+    , actual = testData$severelyx
+    , pred = c(predict(mod[stopping_time], newdata = testData, type = "response"))
   )
 
   return(dt)
 }
 
-bench = data.frame(.cluster = c("cluster", "cluster"), .rep = c(1L, 5L), .k = c(2L, 2L))
-bench = do.call("rbind", replicate(2L, bench, simplify = FALSE))
-bench$.holdout = rep(c("A", "B"), each = nrow(bench) / 2L)
-bench = do.call("rbind", replicate(ITER, bench, simplify = FALSE))
-bench$.iter = rep(1:ITER, each = nrow(bench) / ITER)
+bench = data.frame(
+  .type = rep(c("B", "D", "F", "J", "L", "M"), each = ITER)
+  , .iter = rep(1:ITER, 6L)
+)
 
-res.sv = pmap(bench, ~ sim.sv(..1, ..2, ..3, ..4, ..5))
+res_a = pmap_with_progress(bench, ~ sim(..1, ..2, "A")) |> rbindlist()
+res_b = pmap_with_progress(bench, ~ sim(..1, ..2, "B")) |> rbindlist()
 
-
-# adaption of subsampling to the cluster sampling, important for the stability selection later
-# this is equal to repeated 2-fold draws, trained on one fold and tested on second
-
-sim.ss = function(.holdout, .iter) {
-
-  initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
-
-  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
-  dtest = sv[which(initialSplit[, .iter] == 3L), ]
-
-  mod = gamboost(
-    formula = frml
-    , data = dtrain
-    , family = Binomial(type = "glm", link = "logit")
-    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
-  )
-
-  cv = cvrisk(
-    object = mod
-    , folds = 1L * as.matrix(1L == replicate(25L, folds.svy(dtrain, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
-  )
-  
-  mod[mstop(cv)]
-
-  dt = data.table(
-    holdout = .holdout
-    , type = "subsampling cluster"
-    , nfold = 25L
-    , nrep = 1L
-    , cvstrat = "survey strata"
-    , iter = .iter
-    , mstop = mstop(cv)
-    , ncoef = length(names(coef(mod)))
-    , strata = dtest$strata
-    , actual = dtest$hazx
-    , pred = c(predict(mod, newdata = dtest, type = "response"))
-  )
-
-  return(dt)
-}
-
-bench = data.frame(.holdout = c("A", "B"), .iter = rep(1:ITER, each = 2L))
-res.ss = pmap(bench, ~ sim.ss(..1, ..2))
-
-
-
-# last, check out of region sample
-
-sim.re = function(.holdout, .iter) {
-  
-  initialSplit = switch(.holdout, "A" = holdout.A, "B" = holdout.B)
-  
-  dtrain = sv[which(initialSplit[, .iter] != 3L), ]
-  dtest = sv[which(initialSplit[, .iter] == 3L), ]
-  
-  mod = gamboost(
-    formula = frml
-    , data = dtrain
-    , family = Binomial(type = "glm", link = "logit")
-    , control = boost_control(mstop = MSTOP, nu = 0.25, trace = FALSE)
-  )
-  
-  svyregions = unique(dtrain$region)
-  foldsMat = matrix(data = 1L, nrow = nrow(dtrain), ncol = length(svyregions))
-  for(i in 1:ncol(foldsMat)) foldsMat[dtrain$region == svyregions[i], i] = 0L
-  
-  cv = cvrisk(object = mod, folds = foldsMat)
-  
-  mod[mstop(cv)]
-  
-  dt = data.table(
-    holdout = .holdout
-    , type = "regional cv"
-    , nfold = 1L
-    , nrep = 1L
-    , cvstrat = "none"
-    , iter = .iter
-    , mstop = mstop(cv)
-    , ncoef = length(names(coef(mod)))
-    , strata = dtest$strata
-    , actual = dtest$hazx
-    , pred = c(predict(mod, newdata = dtest, type = "response"))
-  )
-  
-  return(dt)
-}
-
-bench = data.frame(.holdout = c("A", "B"), .iter = rep(1:ITER, each = 2L))
-res.re = pmap(bench, ~ sim.re(..1, ..2))
-
-# combine and save all predictions
-results = list(res.rs, res.sv, res.ss, res.re) |>
-  lapply(rbindlist) |>
-  rbindlist()
-
-save(results, file = here("models", "88qlclkf.rda"))
+res_severely = rbindlist(list(res_a, res_b))
+save(res_severely, file = file.path("models", "r7zhq0pi.rda"))
