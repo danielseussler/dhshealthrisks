@@ -57,7 +57,7 @@ for (i in 1:nrow(rsp)) {
   pred = predict(object = mod[mstop(cv)], newdata = testData, type = "response")
 
   temp_result = data.table(
-    model = "A"
+    model = "A1"
     , id = i
     , mstop = mstop(cv)
     , k = testData$npos
@@ -69,6 +69,43 @@ for (i in 1:nrow(rsp)) {
   res = rbindlist(list(res, temp_result))
 }
 
+
+# main model
+# distributional regression with beta-binomial distributed outcome
+for (i in 1:nrow(rsp)) {
+
+  trainingData = analysis(rsp$splits[[i]])
+  testData = assessment(rsp$splits[[i]])
+  pos = matrix(data = c(trainingData$npos, trainingData$nneg), ncol = 2L)
+
+  mod = gamboostLSS(
+    formula = frml.2
+    , data = trainingData
+    , families = as.families("BB")
+    , method = "noncyclic"
+    , control = boost_control(mstop = 2000L, nu = 0.1, trace = TRUE)
+  )
+
+  cv = cvrisk(
+    object = mod
+    , grid = seq(from = 25L, to = mstop(mod), by = 10L)
+    , folds = cv(model.weights(mod), type = "subsampling", B = 25L, strata = trainingData$strata, prob = 0.8)
+  )
+
+  pred = predict(object = mod[mstop(cv)], newdata = testData, type = "response")
+
+  temp_result = data.table(
+    model = "A2"
+    , id = i
+    , mstop = mstop(cv)
+    , k = testData$npos
+    , n = testData$n
+    , mu = c(pred$mu)
+    , sigma = c(pred$sigma)
+  )
+
+  res = rbindlist(list(res, temp_result))
+}
 
 
 # binomial outcome distribution (i.e. no cluster overdispersion)
