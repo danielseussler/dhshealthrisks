@@ -1,15 +1,12 @@
-#
+# survey characteristics
 #
 #
 #
 
-library(here)
 library(dplyr)
 
-load(file = here("data", "processed", "madagascar", "surveydata.rda"))
+load(file = file.path("data", "processed", "madagascar", "surveydata.rda"))
 
-
-# infos
 n_distinct(tb$strata)
 n_distinct(tb$region)
 n_distinct(tb$cluster)
