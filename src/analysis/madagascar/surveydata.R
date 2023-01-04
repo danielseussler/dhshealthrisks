@@ -14,8 +14,6 @@ library(conflicted)
 
 
 # data
-# rdhs::dhs_datasets(surveyIds = "MD2021DHS", fileFormat = "flat")[, 3:8]
-
 shp = readRDS(file = here("data", "processed", "madagascar", "dhsboundaries.rds"))
 survey = readRDS(file = here("data", "raw", "rdhs", "MDKR81FL.rds"))
 
@@ -92,7 +90,7 @@ hist(tb$haz)
 # table(tb$whzx)
 # hist(tb$whz)
 
-aggregate(hazx ~ urban, data = tb, mean)
+# aggregate(hazx ~ urban, data = tb, mean)
 # aggregate(whzx ~ urban, data = tb, mean)
 
 
@@ -286,7 +284,7 @@ access = terra::rast(access)
 access = extract(x = access, y = cluster[, c("lon", "lat")], method = "bilinear", ID = FALSE)
 colnames(access) = c("cityaccess", "healthaccess")
 
-fews = read_sf(here("data/raw/FEWSNET/MG_202106_CS.shp"))
+fews = read_sf(here("data", "raw", "FEWSNET", "MG_202106_CS.shp"))
 fews = select(fews, fews = CS)
 
 cluster = st_join(cluster, fews, join = st_within, left = TRUE)
