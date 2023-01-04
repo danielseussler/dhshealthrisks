@@ -3,12 +3,11 @@
 #
 #
 
-library(here)
 library(data.table)
 library(Metrics)
-library(ggplot2) 
+library(ggplot2)
 
-load(file = here("models", "lvcw0a2q.rda"))
+load(file = file.path("models", "lvcw0a2q.rda"))
 
 res[, predc := as.integer(pred >= 0.5)]
 res[model == "A", name := "Base model"]
@@ -29,16 +28,16 @@ metricsSummary = res[,
 
 metricsSummary
 
-plt = ggplot(data = metricsSummary, mapping = aes(x = name, y = loss)) + 
-  geom_line(mapping = aes(group = iter), color = "grey") + 
-  geom_boxplot(alpha = 0.5, width = 0.5) + 
-  labs(x = "", y = "Average out-of-sample loss") +
+plt = ggplot(data = metricsSummary, mapping = aes(x = name, y = loss)) +
+  geom_line(mapping = aes(group = iter), color = "grey") +
+  geom_boxplot(alpha = 0.5, width = 0.5) +
+  labs(x = "", y = expression(hat(R))) +
   theme_bw()
 
 ggsave(
   plot = plt
-  , filename = "fig_mdg_modelselection.png"
-  , path = here("results", "figures")
+  , filename = "madagascar_modelselection.png"
+  , path = file.path("results", "figures")
   , dpi = 600
   , width = 200
   , height = 80
