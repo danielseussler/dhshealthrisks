@@ -3,7 +3,6 @@
 #
 #
 
-library(here)
 library(dplyr)
 library(survey)
 library(ggplot2)
@@ -32,7 +31,7 @@ statcomp[, .(Indicator, CountryName, SurveyYear, Value, DenominatorWeighted)]
 # survey data and extract data
 variables = c("hv000", "hv001", "hv002", "hv005", "hv023", "hv024", "hv025", "hml32", "hml35", "hv042", "hv103", "hc1")
 
-sv = readRDS(file = here("data", "raw", "rdhs", "MLPR81FL.rds"))
+sv = readRDS(file = file.path("data", "raw", "rdhs", "MLPR81FL.rds"))
 sv = sv[variables]
 sv = subset(sv, hv042 == 1 & hv103 == 1 & hc1 %in% 6:59 & hml35 %in% 0:1)
 sv = mutate(sv, hv024 = labelled::to_character(hv024), hv025 = labelled::to_character(hv025))
@@ -68,8 +67,8 @@ results$region = forcats::fct_reorder(results$region, results$hml35)
 plt = ggplot(data = results, mapping = aes(x = region, y = hml35)) +
   geom_pointrange(mapping = aes(ymin = ci_l, ymax = ci_u), position = position_dodge(width = 0.5)) +
   geom_abline(intercept = results[results$region == "Mali\n(total)", "hml35"], slope = 0, color = "gray") +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.4)) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.4)) +
   labs(x = "", y = "Prevalence") +
   scale_color_manual(values = viridis(n = 3, alpha = 0.8, begin = 0.3, end = 0.7), name = "Type")
 
-ggsave(plot = plt, filename = "fig_mli_designestimates.png", path = here("results", "figures"), dpi = 600, width = 200, height = 100, units = "mm", device = png)
+ggsave(plot = plt, filename = "mali_designestimates.png", path = file.path("results", "figures"), dpi = 600, width = 200, height = 100, units = "mm", device = png)
