@@ -30,7 +30,7 @@ mod = gamboostLSS(
   , data = cl
   , families = as.families("BB")
   , method = "noncyclic"
-  , control = boost_control(mstop = 5000L, nu = 0.1, trace = TRUE)
+  , control = boost_control(mstop = 2000L, nu = 0.1, trace = TRUE)
 )
 
 cv = cvrisk(
