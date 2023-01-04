@@ -1,8 +1,9 @@
-# model formulas
+# formulas
 #
 #
 #
 
+# smooth effects for continous and additional spatial smooth effects
 frml.1 = list(
   mu = pos ~
     bols(intercept, intercept = FALSE) +
@@ -31,6 +32,35 @@ frml.1 = list(
 
     # brad(lon, lat, knots = 100, df = 1L, covFun = fields::stationary.cov,
     #      args = list(Covariance = "Matern", smoothness = 1.5, theta = NULL))
+
+    bols(lon) + bols(lat) + bols(lon, by = lat) +
+    bspatial(lon, lat, df = 1L, center = TRUE)
+)
+
+
+# space-varying coefficient models (with centered spatial effects)
+frml.2 = list(
+  mu = pos ~
+    bols(intercept, intercept = FALSE) +
+
+    bols(urban) + bspatial(lon, lat, by = urban, df = 1L, center = TRUE) +
+    bols(climate) + bspatial(lon, lat, by = climate, df = 1L, center = TRUE) +
+    bols(elev) + bspatial(lon, lat, by = elev, df = 1L, center = TRUE) +
+
+    bols(lstday) + bspatial(lon, lat, by = lstday, df = 1L, center = TRUE) +
+    bols(lstnight) + bspatial(lon, lat, by = lstnight, df = 1L, center = TRUE) +
+    bols(ndvi) + bspatial(lon, lat, by = ndvi, df = 1L, center = TRUE) +
+
+    bols(evi) + bspatial(lon, lat, by = evi, df = 1L, center = TRUE) +
+    bols(precip) + bspatial(lon, lat, by = precip, df = 1L, center = TRUE) +
+    bols(log_pop) + bspatial(lon, lat, by = log_pop, df = 1L, center = TRUE) +
+
+    bols(lon) + bols(lat) + bols(lon, by = lat) +
+    bspatial(lon, lat, df = 1L, center = TRUE),
+
+  sigma = pos ~
+    bols(intercept, intercept = FALSE) +
+    bols(urban) + bspatial(lon, lat, by = urban, df = 1L, center = TRUE) +
 
     bols(lon) + bols(lat) + bols(lon, by = lat) +
     bspatial(lon, lat, df = 1L, center = TRUE)
