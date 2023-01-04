@@ -1,23 +1,20 @@
-# figures
+#
 #
 #
 #
 
-library(here)
-library(Metrics)
 library(data.table)
+library(Metrics)
 library(ggplot2)
 library(patchwork)
 
+load(file = file.path("models", "k30w39r3.rda"))
 
-# load simulation data
-# overlay boxplots of empirical distribution of predicited oob risk with empirical distr of true risk
+res_moderately[, regression := "moderately or severely"]
+res_severly[, regression := "severely"]
 
+results = rbindlist(list(res_moderately, res_severly))
 
-load(file = here("models", "k30w39r3.rda"))
-# load(file = here("models", "k30w39r3severe.rda"))
-# load(file = here("models", "k30w39r3gaussian.rda"))
-# load(file = here("models", "sd0s5lew.rda"))
 results[, risk_diff := true_risk - cv_risk]
 results[, risk_diff_ratio := (true_risk - cv_risk) / true_risk]
 
@@ -30,36 +27,50 @@ results[type == "bootstrap stratified", name := "bootstrap\nsurvey stratified"]
 results[type == "subsampling survey cluster", name := "subsampling\ncluster + survey strat."]
 
 
+tmp = results[
+  , .(mean = mean(cv_risk), sd = sd(cv_risk), true_mean = mean(true_risk), true_sd = sd(true_risk))
+  , by = .(holdout, type, regression)
+]
 
-trueQuantilesA = quantile(subset(results, holdout == "A")$true_risk, probs = c(0.05, 0.95))
-plt.A = ggplot(data = subset(results, holdout == "A"), mapping = aes(x = name, y = cv_risk)) +
-  # geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = trueQuantilesA[1], ymax = trueQuantilesA[2]), fill = "grey", color = NA, alpha = 0.2) +
-  geom_boxplot(alpha = 0.5) +
-  geom_boxplot(aes(y = true_risk), alpha = 0.5, color = "red") +
-  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
-  labs(x = "", y = expression(italic(hat(R)))) +
-  facet_grid(~holdout, scales = "free") +
-  theme_bw()
+tmp
+add1 = data.table(holdout = "A", type = "true", regression = "moderately or severely", true_mean = 0.6381456, mean = 0.6381456, true_sd = 0.005575042, sd = 0.005575042)
+add2 = data.table(holdout = "B", type = "true", regression = "moderately or severely", true_mean = 0.6385714, mean = 0.6385714, true_sd = 0.005901664, sd = 0.005901664)
+add3 = data.table(holdout = "A", type = "true", regression = "severely", true_mean = 0.3675347, mean = 0.3675347, true_sd = 0.012865891, sd = 0.012865891)
+add4 = data.table(holdout = "B", type = "true", regression = "severely", true_mean = 0.3662259, mean = 0.3662259, true_sd = 0.010642776, sd = 0.010642776)
 
+tmp = rbindlist(list(tmp, add1, add2, add3, add4), fill=TRUE)
+tmp[, lower := mean - qnorm(0.975) * sd]
+tmp[, upper := mean + qnorm(0.975) * sd]
 
-trueQuantilesB = quantile(subset(results, holdout == "B")$true_risk, probs = c(0.05, 0.95))
-plt.B = ggplot(data = subset(results, holdout == "B"), mapping = aes(x = name, y = cv_risk)) +
-  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = trueQuantilesB[1], ymax = trueQuantilesB[2]), fill = "grey", color = NA, alpha = 0.2) +
-  geom_boxplot(alpha = 0.5) +
-  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
-  scale_y_continuous(limits = c(0.615, 0.655)) +
-  labs(x = "", y = "") +
-  facet_grid(~holdout, scales = "free") +
-  theme_bw() +
-  theme(axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank())
+tmp[, bias := true_mean - mean]
+
+ggplot(data = tmp, mapping = aes(x = type, y = mean)) +
+  geom_pointrange(mapping = aes(ymin = lower, ymax = upper)) +
+  facet_grid(regression ~ holdout, scales = "free") +
+  labs(x = "Type", y = expression(italic(hat(R)))) +
+  theme_light()
+
+ggplot(data = tmp, mapping = aes(x = type, y = bias)) +
+  geom_point() +
+  geom_segment(mapping = aes(x = type, xend = type, y = 0, yend = bias)) +
+  geom_abline(intercept = 0, slope = 0, color = "grey") +
+  facet_grid(regression ~ holdout, scales = "free") +
+  labs(x = "Type", y = "Bias") +
+  theme_light()
+
+ggplot(data = tmp, mapping = aes(x = type, y = sd)) +
+  geom_point() +
+  geom_segment(mapping = aes(x = type, xend = type, y = 0, yend = sd)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  facet_grid(regression ~ holdout, scales = "free") +
+  labs(x = "Type", y = "Standard Deviation") +
+  theme_light()
 
 
 ggsave(
   plot = plt.A + plt.B
-  , filename = "fig_mdg_simulation_3.png"
-  , path = here("results", "figures")
+  , filename = "madagascar_simulation_cv.png"
+  , path = file.path("results", "figures")
   , scale = 1.4
   , dpi = 600
   , width = 200
