@@ -1,4 +1,4 @@
-#
+# analysis
 #
 #
 #
@@ -20,15 +20,15 @@ sv$severelyx = with(sv, ifelse(haz < -300, 1L, 0L))
 sv$severelyf = factor(sv$severelyx, levels = c(0L, 1L), labels = c("no", "yes"))
 
 
-# estimate main model based on the simple formula 
-# resample model to with cluster sub sampling and survey stratification to select optimal number of 
+# estimate main model based on the simple formula
+# resample model to with cluster sub sampling and survey stratification to select optimal number of
 # boosting iterations and apply early stopping
 
 fitModerately = gamboost(
   formula = update(frml.1, moderatelyf ~ .)
   , data = sv
   , family = Binomial(type = "glm", link = "logit")
-  , control = boost_control(mstop = 10000L, nu = 0.1, trace = TRUE)
+  , control = boost_control(mstop = 5000L, nu = 0.1, trace = TRUE)
 )
 
 cvModerately = cvrisk(
@@ -37,7 +37,7 @@ cvModerately = cvrisk(
   , folds = cv(weights = model.weights(fitModerately), type = "subsampling", B = 25L, prob = 0.8, strata = sv$strata)
 )
 
-plot(cvModerately, main = "25-fold survey straified subsampling")
+plot(cvModerately, main = "25-fold survey straified subsampling p = 0.8")
 
 fitModerately[mstop(cvModerately)]
 names(coef(fitModerately))
@@ -48,19 +48,19 @@ fitSeverely = gamboost(
   formula = update(frml.1, severelyf ~ .)
   , data = sv
   , family = Binomial(type = "glm", link = "logit")
-  , control = boost_control(mstop = 10000L, nu = 0.1, trace = TRUE)
+  , control = boost_control(mstop = 5000L, nu = 0.1, trace = TRUE)
 )
 
 cvSeverely = cvrisk(
   object = fitSeverely
   , grid = seq(from = 25L, to = mstop(fitSeverely), by = 10L)
-  , folds = cv(weights = model.weights(fitSeverely), type = "subsampling", B = 50L, prob = 0.8, strata = sv$strata)
+  , folds = cv(weights = model.weights(fitSeverely), type = "subsampling", B = 25L, prob = 0.8, strata = sv$strata)
 )
 
-plot(cvSeverely, main = "25-fold survey straified subsampling")
+plot(cvSeverely, main = "25-fold survey straified subsampling p = 0.8")
 
 fitSeverely[mstop(cvSeverely)]
-names(coef(cvSeverely))
+names(coef(fitSeverely))
 
 
 
@@ -70,7 +70,7 @@ names(coef(cvSeverely))
 # check variable importance before using deselection approach
 # if risk is distributed over too many base learner this might not be the best approach
 
-# note: the warning thrown is because the function searches for the response var in the data frame, 
+# note: the warning thrown is because the function searches for the response var in the data frame,
 # and converts to numerics which throws this error converting region char, no issue with the estimation
 length(names(coef(fitModerately, which = "")))
 names(coef(fitModerately))
@@ -82,7 +82,7 @@ deselectModerately = DeselectBoost(
   , data = sv
   , tau = 0.01
   , method = "attributable"
-) 
+)
 
 deselectModeratelyCum = DeselectBoost(
   object = fitModerately
@@ -90,7 +90,7 @@ deselectModeratelyCum = DeselectBoost(
   , data = sv
   , tau = 0.01
   , method = "cumulative"
-) 
+)
 
 names(coef(fitModerately))
 names(coef(deselectModerately))
@@ -104,7 +104,7 @@ deselectSeverely = DeselectBoost(
   , data = sv
   , tau = 0.01
   , method = "attributable"
-) 
+)
 
 deselectSeverelyCum = DeselectBoost(
   object = fitSeverely
@@ -112,52 +112,16 @@ deselectSeverelyCum = DeselectBoost(
   , data = sv
   , tau = 0.01
   , method = "cumulative"
-) 
+)
 
 names(coef(fitSeverely))
 names(coef(deselectSeverely))
 names(coef(deselectSeverelyCum))
 
 
-
-# stability selection
-
-# set the expected number of relevant terms as 10, per family error rate (expected) 2 and 4 
-# MB is for the older the more conservative bound, SS uses complementary sampling and is additional 
-# assumptions on the distribution of 'noise' variables to derive bounds without the initial assumptions
-# is thereby only controlling the number of *expected number of selected variables with low selection probability*
-
-stabsel_parameters(x = fitModerately, q = 10L, PFER = 2L, sampling.type = "SS")
-stabsel_parameters(x = fitModerately, q = 10L, PFER = 4L, sampling.type = "MB")
-
-stabModeratelyMB = stabsel(
-  x = fitModerately
-  , q = 10L
-  , PFER = 4L
-  , grid = 0:5000
-  , sampling.type = "MB"
-  , folds = 1L * as.matrix(1L == replicate(100L, folds.svy(sv, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
-)
-
-stabModeratelySS = stabsel(
-  x = fitModerately
-  , q = 10L
-  , PFER = 2L
-  , grid = 0:5000
-  , sampling.type = "SS"
-  , assumption = "unimodal"
-  , folds = 1L * as.matrix(1L == replicate(50L, folds.svy(sv, nfolds = 2L, strataID = "strata", clusterID = "cluster")))
-)
-
-plot(stabModeratelyMB, type = "maxsel", np = 20L, main = "Stability Selection MB")
-plot(stabModeratelySS, type = "maxsel", np = 20L, main = "Stability Selection SS")
-
-plot(stabModeratelyMB, type = "path")
-plot(stabModeratelySS, type = "path")
-
-
+# save
 save(
-  fitModerately, fitSeverely, cvModerately, cvSeverely, deselectModerately, deselectModeratelyCum, 
-  deselectSeverely, deselectSeverelyCum, stabModeratelyMB, stabModeratelySS
+  fitModerately, fitSeverely, cvModerately, cvSeverely,
+  deselectModerately, deselectModeratelyCum, deselectSeverely, deselectSeverelyCum
   , file = file.path("models", "h9h7v919.rda")
 )
