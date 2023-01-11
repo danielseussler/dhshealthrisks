@@ -1,4 +1,4 @@
-# thanks to https://www.jamesatkins.net/posts/progress-bar-in-purrr-map-df/
+# credit to https://www.jamesatkins.net/posts/progress-bar-in-purrr-map-df/
 #
 #
 #
