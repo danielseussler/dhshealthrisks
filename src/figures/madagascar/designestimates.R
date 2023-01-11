@@ -37,7 +37,6 @@ library(viridis)
 # statcomp = rdhs::dhs_data(indicatorIds = "CN_NUTS_C_HA2", countryIds = "MD")
 # statcomp[, .(Indicator, CountryName, SurveyYear, Value, DenominatorWeighted, DenominatorUnweighted)]
 
-
 # survey data and extract data
 variables = c("hv000", "hv001", "hv002", "hv005", "hv023", "hv024", "hv025", "hv042", "hv103", "hc1", "hc70")
 
@@ -46,13 +45,12 @@ sv = sv[variables]
 sv = subset(sv, hv103 == 1 & hc1 %in% 0:59 & hc70 < 9990L)
 sv = mutate(sv, hv024 = labelled::to_character(hv024), hv025 = labelled::to_character(hv025), moderately = hc70 < -200, severely = hc70 < -300)
 
-
 # survey design - two stage sampling, clusters are first stage psu (no sampling weights)
 # second stage is inverse proportional probability sampling pps
 # national estimates can also be extracted by DHS survey package
 # weights are household level / 1e6 by DHS Guide
 
-design = svydesign(ids = ~hv001+hv002, strata = ~hv023, data = sv, weights = ~hv005)
+design = svydesign(ids = ~ hv001 + hv002, strata = ~hv023, data = sv, weights = ~ hv005)
 
 results = vector(mode = "list")
 results[[1]] = svyby(formula = ~moderately, by = ~hv024, design = design, FUN = svyciprop, na.rm = TRUE, vartype = "ci")
@@ -64,27 +62,22 @@ results = do.call(bind_rows, results)
 
 results$region = stringr::str_to_title(results$hv024)
 results$region[is.na(results$region)] = stringr::str_to_title(results$hv025[is.na(results$region)])
-results$region[is.na(results$region)] = "Madagascar (total)"
-results$region[results$region == "Urban"] = "Madagascar (Urban)"
-results$region[results$region == "Rural"] = "Madagascar (Rural)"
+results$region[is.na(results$region)] = "Total"
 results$region = forcats::fct_reorder(results$region, results$moderately)
-
-theme_set(theme_classic())
+results$level = c(rep(x = "Region", times = 23L), rep(x = "Madagascar", times = 3L)) |> as.factor()
 
 plt = ggplot(data = results, mapping = aes(x = region, y = moderately)) +
-  geom_pointrange(mapping = aes(ymin = ci_l, ymax = ci_u), position = position_dodge(width = 0.7)) +
-  geom_abline(intercept = results[results$region == "Madagascar (total)", "moderately"], slope = 0, color = "gray") +
+  geom_pointrange(mapping = aes(ymin = ci_l, ymax = ci_u)) +
+  geom_abline(intercept = results[results$region == "Total", "moderately"], slope = 0, color = "gray") +
   labs(x = "", y = "Prevalence") +
-  scale_color_manual(values = viridis(n = 3L, alpha = 0.8, begin = 0.3, end = 0.7), name = "Type") +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 0.7)) +
-  scale_shape(name = "Type") +
+  facet_grid(. ~ level, scales = "free", space = "free") +
   theme(axis.text.x = element_text(angle = 45L, hjust = 1L))
 
 ggsave(
   plot = plt
   , filename = "madagascar_designestimates.png"
   , path = file.path("results", "figures")
-  , scale = 1.2, dpi = 600, width = 200, height = 100
+  , dpi = 600, width = 200, height = 100
   , units = "mm", device = png
 )
-
