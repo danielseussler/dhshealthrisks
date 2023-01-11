@@ -1,20 +1,21 @@
 # get shapefiles
 # source: GADM and DHS spatial data repository
-# 
+#
 #
 
 library(here)
 library(purrr)
 library(sf)
+library(geodata)
 
 madagascar = map(
   .x = c(0, 1, 2, 3),
-  .f = ~ geodata::gadm(
-    country = "Madagascar",
-    level = .,
-    path = tempdir(),
-    version = "4.1",
-    resolution = 2
+  .f = ~ gadm(
+    country = "Madagascar"
+    , level = .
+    , path = tempdir()
+    , version = "4.1"
+    , resolution = 2
   ) |>
     st_as_sf() |>
     st_transform(crs = 4326)
@@ -23,12 +24,12 @@ madagascar = map(
 
 mali = map(
   .x = c(0, 1, 2),
-  .f = ~ geodata::gadm(
-    country = "Mali",
-    level = .,
-    path = tempdir(),
-    version = "4.1",
-    resolution = 2
+  .f = ~ gadm(
+    country = "Mali"
+    , level = .
+    , path = tempdir()
+    , version = "4.1"
+    , resolution = 2
   ) |>
     st_as_sf() |>
     st_transform(crs = 4326)
@@ -36,12 +37,12 @@ mali = map(
 
 ethiopia = map(
   .x = c(0, 1, 2),
-  .f = ~ geodata::gadm(
-    country = "Ethiopia",
-    level = .,
-    path = tempdir(),
-    version = "4.1",
-    resolution = 2
+  .f = ~ gadm(
+    country = "Ethiopia"
+    , level = .
+    , path = tempdir()
+    , version = "4.1"
+    , resolution = 2
   ) |>
     st_as_sf() |>
     st_transform(crs = 4326)
